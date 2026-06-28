@@ -68,8 +68,8 @@ set(LIBS_LINK
     -lsoci_postgresql       # TODO: Put these behind conditional compilation flags.
     -lsoci_sqlite3
     -ldl
-    -lmysqlclient
     cpputils
+    #-lmysqlclient
     #-lspdlog
     -lstdc++fs)
 

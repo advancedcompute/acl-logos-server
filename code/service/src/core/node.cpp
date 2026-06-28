@@ -112,19 +112,17 @@ namespace acl { namespace logos { namespace core {
         ss << "port=" << settings.database_settings.port << " ";
         ss << "db=" << settings.database_settings.database << " ";
         ss << "user=" << settings.database_settings.username << " ";
-        ss << "password=\"" << settings.database_settings.password << "\" ";
+        ss << "password='" << settings.database_settings.password << "' ";
 
         if(settings.database_settings.certificate.use_tls)
         {
-            ss << "sslcert=" << cpp::utils::full_resolve_path(settings.database_settings.certificate.cert_path) << " ";
-            ss << "sslkey=" << cpp::utils::full_resolve_path(settings.database_settings.certificate.key_path) << " ";
-            ss << "sslca=" << cpp::utils::full_resolve_path(settings.database_settings.certificate.ca_path) << " ";
+            ss << "sslcert=" << cpp::utils::full_resolve_path(settings.database_settings.certificate.cert_path).c_str() << " ";
+            ss << "sslkey=" << cpp::utils::full_resolve_path(settings.database_settings.certificate.key_path).c_str() << " ";
+            ss << "sslca=" << cpp::utils::full_resolve_path(settings.database_settings.certificate.ca_path).c_str() << " ";
             ss << "ssl_mode=REQUIRED ";        // TODO: Make this customizable. For now, good enough.
         } else {
             LogMessage("Database connection is unencrypted. Recommended user turns on encryption", spdlog::level::warn);
         }
-
-        LogMessage(ss.str());
 
         if(settings.database_settings.engine == "mysql") {
             try {
@@ -159,8 +157,8 @@ namespace acl { namespace logos { namespace core {
         if(success) {
             // Connected to database, now need to check schema, make tables etc.
             // 2. Resolve schema - create tables if need be
-
-
+            LogMessage("Successfully connected to database, now checking schema");
+            
         } else {
             LogMessage(cpp::utils::stringFormat("Unable to connect to database host: %s",
                 settings.database_settings.host), spdlog::level::err);

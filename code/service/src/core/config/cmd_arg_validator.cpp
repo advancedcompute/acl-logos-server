@@ -326,7 +326,7 @@ namespace acl { namespace logos { namespace core {
                 ++errorCount;
             } else {
                 // TODO: Load file
-                if( cpp::utils::file_exists(config.identity_settings.certificate.ca_path) )
+                if( cpp::utils::file_exists(config.database_settings.certificate.ca_path) )
                 {
                     
                 } else {
@@ -336,11 +336,11 @@ namespace acl { namespace logos { namespace core {
 
             if(config.database_settings.certificate.cert_path.empty())
             {
-                getCallback()("database.certificate.private_key_path", "<empty>", "Database keypair private_key_path must be set");
+                getCallback()("database.certificate.cert_path", "<empty>", "Database certificate cert_path must be set");
                 ++errorCount;
             } else {
                 // TODO: Load file
-                if( cpp::utils::file_exists(config.identity_settings.certificate.cert_path) )
+                if( cpp::utils::file_exists(config.database_settings.certificate.cert_path) )
                 {
 
                 } else {
@@ -350,11 +350,11 @@ namespace acl { namespace logos { namespace core {
 
             if(config.database_settings.certificate.key_path.empty())
             {
-                getCallback()("database.certificate.key_path", "<empty>", "Database keypair key_path must be set");
+                getCallback()("database.certificate.key_path", "<empty>", "Database certificate key_path must be set");
                 ++errorCount;
             } else {
                 // TODO: Load file
-                if( cpp::utils::file_exists(config.identity_settings.certificate.key_path) )
+                if( cpp::utils::file_exists(config.database_settings.certificate.key_path) )
                 {
 
                 } else {
