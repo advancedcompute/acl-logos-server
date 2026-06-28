@@ -1,0 +1,7 @@
+
+build/
+*credentials.json
+.env
+.env.yaml
+
+code/service/include/core/constants.h

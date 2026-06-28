@@ -1,0 +1,24 @@
+#pragma once
+
+#define PRODUCT_NAME                            "@PRODUCT_NAME@"
+#define PRODUCT_PRETTY_NAME                     "@PRODUCT_PRETTY_NAME@"
+#define PRODUCT_DESCRIPTION                     "@PRODUCT_DESCRIPTION@"
+
+#define PRODUCT_MAJOR_VERSION                     @PRODUCT_MAJOR_VERSION@
+#define PRODUCT_MINOR_VERSION                     @PRODUCT_MINOR_VERSION@
+#define PRODUCT_PATCH_VERSION                     @PRODUCT_PATCH_VERSION@
+#define PRODUCT_BUILD_VERSION                     @PRODUCT_BUILD_VERSION@
+#define PRODUCT_VERSION_STR                       "@PRODUCT_MAJOR_VERSION@.@PRODUCT_MINOR_VERSION@.@PRODUCT_PATCH_VERSION@.@PRODUCT_BUILD_VERSION@"
+#define PRODUCT_COPYRIGHT_STR                      "Copyright © 2026"
+
+#define GIT_BRANCH_NAME                             "@GIT_BRANCH@"
+#define GIT_LAST_COMMIT                             "@GIT_COMMIT@"
+
+#define DEFAULT_CONFIG_FILE                         "settings.json"
+
+#define ORGANIZATION_NAME                           "@ORGANIZATION_NAME@"
+#define ORGANIZATION_DOMAIN                         "@ORGANIZATION_DOMAIN@"
+#define ORGANIZATION_EMAIL                          "@ORGANIZATION_EMAIL@"
+
+#define KAFKA_PRODUCER_FLUSH_TIMEOUT_MS             3000
+#define MAX_GRPC_SERVER_THREAD_COUNT                100

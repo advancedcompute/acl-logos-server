@@ -1,0 +1,16 @@
+[submodule "dep/acl-blockchain-proto"]
+	path = dep/acl-blockchain-proto
+	url = git@github.com:advancedcompute/acl-blockchain-proto.git
+	branch = main
+[submodule "dep/acl-libcpputils"]
+	path = dep/acl-libcpputils
+	url = git@github.com:advancedcompute/acl-libcpputils.git
+	branch = master
+#[submodule "dep/jsoncpp"]
+#	path = dep/jsoncpp
+#	url = git@github.com:open-source-parsers/jsoncpp.git
+#	branch = 1.9.5
+[submodule "dep/spdlog"]
+	path = dep/spdlog
+	url = git@github.com:gabime/spdlog.git
+	branch = v2.x

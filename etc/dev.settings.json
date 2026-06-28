@@ -1,0 +1,196 @@
+{
+    "logging": [
+        {
+            "name": "console",
+            "level": "info",
+            "output": "console",
+            "pattern": "[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %v"
+        },
+        {
+            "name": "rotation-log",
+            "level": "warn",
+            "output": "rotating-file",
+            "output-path": "~/.config/acl/logos/node/logs/svc-rot.log",
+            "pattern": "[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %v",
+            "max-size": 1073741824,
+            "max-files": 10
+        },
+        {
+            "name": "daily-log",
+            "level": "critical",
+            "output": "daily-file",
+            "output-path": "~/.config/acl/logos/node/logs/svc-daily.log",
+            "pattern": "[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %v",
+            "restart-time": "00:00"
+        }
+    ],
+    "identity": {
+        "node_id": "logos-node-01",
+        "operator_id": "org-acl",
+        "keypair": {
+            "type": "ed25519",
+            "private_key_path": "~/.config/acl/logos/node/keys/id_ed25519.key",
+            "public_key_path": "~/.config/acl/logos/node/keys/id_ed25519.pub"
+        },
+        "certificate": {
+            "use_tls": true,
+            "cert_path": "~/.config/acl/logos/node/tls/cert.pem",
+            "key_path": "~/.config/acl/logos/node/tls/key.pem",
+            "ca_path": "~/.config/acl/logos/node/tls/ca.pem"
+        }
+    },
+    "network": {
+        "network_id": "mainnet-alpha",
+        "network_type": "permissioned",
+        "bootstrap_peers": [
+            "10.0.0.1:7000",
+            "10.0.0.2:7000"
+        ],
+        "peer_discovery": {
+            "enabled": true,
+            "method": "gossip",
+            "max_peers": 50
+        },
+        "nat_traversal": {
+            "enabled": true,
+            "mode": "stun"
+        },
+        "encryption": {
+            "wire_encryption": "noise",
+            "handshake": "tls13"
+        }
+    },
+    "chains": [
+        {
+            "chain_id": "acl-logos-chain",
+            "join_mode": "verified",
+            "auto_sync": true,
+            "validators": {
+                "required_quorum": 3,
+                "validator_set": [
+
+                ]
+            },
+            "consensus": {
+                "type": "posbft",
+                "block_time_ms": 2000
+            },
+            "privacy": {
+                "default_visibility": "mixed",
+                "supported_modes": ["public", "private", "mixed"]
+            },
+            "governance": {
+                "enabled": true,
+                "proposal_threshold": 0.66
+            }
+        }
+    ],
+    "database": {
+        "engine": "mysql",
+        "mysql": {
+            "host": "0.0.0.0",
+            "port": 3306,
+            "certificate": {
+                "use_tls": true,
+                "cert_path": "~/.config/acl/logos/node/tls/db.cert.pem",
+                "key_path": "~/.config/acl/logos/node/tls/db.key.pem",
+                "ca_path": "~/.config/acl/logos/node/tls/db.ca.pem"
+            }
+        }
+    },
+    "messaging": {
+        "enabled": true,
+        "backend": "kafka",
+        "kafka": {
+            "brokers": [
+                "kafka1:9092",
+                "kafka2:9092"
+            ],
+            "client_id": "chain-node-01",
+            "topics": {
+                "transactions": "chain.tx",
+                "blocks": "chain.blocks",
+                "audit": "chain.audit",
+                "contracts": "chain.contracts",
+                "rbac": "chain.rbac"
+            },
+            "acks": "all",
+            "compression": "lz4"
+        }
+    },
+    "storage": {
+        "engine": "hybrid",
+        "backends": {
+            "local": {
+                "path": "~/config/storage/"
+            },
+            "s3": {
+                "endpoint": "https://s3.example.com",
+                "bucket": "chain-storage",
+                "access_key": "xxxxx",
+                "secret_key": "xxxxx",
+                "region": "eu-west-1"
+                }
+            },
+
+            "encryption": {
+                "at_rest": true,
+                "algorithm": "aes-256-gcm"
+            }
+        },
+        "security": {
+        "rbac_mode": "enforced",
+        "default_deny": true,
+        "audit_all_actions": true,
+        "signature_scheme": "ed25519",
+        "policy_engine": "opa",
+        "rate_limiting": {
+            "enabled": true,
+            "requests_per_second": 1000
+        }
+    },
+    "grpc": {
+        "listen_address": "0.0.0.0:50051",
+        "max_message_size_mb": 64,
+        "keepalive": {
+            "time_ms": 30000,
+            "timeout_ms": 10000
+        },
+        "tls": {
+            "enabled": true,
+            "cert_path": "~/.config/logos/node/grpc/cert_path.pem",
+            "key_path": "~/.config/logos/node/grpc/key_path.pem"
+        }
+    },
+    "rpc": {},
+    "configSync": {
+        "enabled": true,
+        "mode": "verified_pull",
+        "source": {
+            "type": "chain",
+            "chain_id": "governance-chain"
+        },
+        "verification": {
+            "require_signature": true,
+            "min_signatures": 3,
+            "trusted_keys": [
+            "gov-key-1",
+            "gov-key-2"
+            ]
+        },
+        "update_policy": {
+            "auto_apply": false,
+            "require_restart": true,
+            "rollback_on_failure": true
+        }
+    },
+    "limits": {
+        "max_pending_transactions": 10000,
+        "max_contract_execution_ms": 5000,
+        "max_storage_upload_mb": 1024,
+        "max_peer_connections": 200,
+        "ddos_protection": {
+            "enabled": true
+        }
+    }
+}
