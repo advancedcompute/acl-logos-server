@@ -16,11 +16,9 @@ function cleanDirectory() {
 }
 
 function cleanGeneratedCode() {
-    cleanDirectory $script_dir/src/c++/common/rpc/generated/ 1
-    cleanDirectory $script_dir/src/python/dte 1
-    cleanDirectory $script_dir/src/python/frontend/dte 1
-    cleanDirectory $script_dir/src/python/backend/dte 1
-    cleanGeneratedMeta
+    cleanDirectory $script_dir/.grpc_generated
+    cleanDirectory $script_dir/code/service/include/core/rpc/generated
+    cleanDirectory $script_dir/code/service/src/core/rpc/generated
 }
 
 function cleanBuildDirs() {
@@ -45,11 +43,11 @@ function generatePython() {
         python3 -m grpc_tools.protoc -I $1 --python_out=$2 --grpc_python_out=$2 "$service_filepath"
 
         # Work around fix to prefix the imports
-        for svc_filename in $service_filename_list; do
-            svc_name="${svc_filename%.*}"
-            sed -i "s/import ${svc_name}/import dte.${svc_name}/g" "$2/${service_filename}_pb2_grpc.py"
-            sed -i "s/import ${svc_name}/import dte.${svc_name}/g" "$2/${service_filename}_pb2.py"
-        done
+        #for svc_filename in $service_filename_list; do
+        #    svc_name="${svc_filename%.*}"
+        #    sed -i "s/import ${svc_name}/import dte.${svc_name}/g" "$2/${service_filename}_pb2_grpc.py"
+        #    sed -i "s/import ${svc_name}/import dte.${svc_name}/g" "$2/${service_filename}_pb2.py"
+        #done
     done
 }
 
@@ -84,17 +82,18 @@ function usage() {
 
 
 
-elif [ "$1" = "generate-py" ]; then
-    generatePython $script_dir/src/service-definitions $script_dir/src/python/dte $script_dir/src/python
-
-    # Copy to frontend & backend website roots
-    cp -r $script_dir/src/python/dte $script_dir/src/python/frontstage/
-    cp -r $script_dir/src/python/dte $script_dir/src/python/backstage/
-elif [ "$1" = "generate-cpp" ]; then
-    if [ ! -d "$script_dir/src/c++/common/rpc" ]; then
-        mkdir "$script_dir/src/c++/common/rpc"
+if [ "$1" = "generate-py" ]; then
+    if [ ! -d "$script_dir/.grpc_generated/py" ]; then
+        mkdir "$script_dir/.grpc_generated/py"
     fi;
-    generateCpp $script_dir/src/service-definitions $script_dir/src/c++/common/rpc/generated
+    generatePython $script_dir/dep/acl-blockchain-proto/protobuf $script_dir/.grpc_generated/py
+elif [ "$1" = "generate-cpp" ]; then
+    if [ ! -d "$script_dir/.grpc_generated/cpp" ]; then
+        mkdir "$script_dir/.grpc_generated/cpp"
+    fi;
+    generateCpp $script_dir/dep/acl-blockchain-proto/protobuf $script_dir/.grpc_generated/cpp
+    cp $script_dir/.grpc_generated/cpp/*.h $script_dir/code/service/include/core/rpc/generated
+    cp $script_dir/.grpc_generated/cpp/*.cc $script_dir/code/service/src/core/rpc/generated
 elif [ "$1" == "clean-build" ]; then
     cleanBuildDirs
 elif [ "$1" == "clean-code" ]; then
