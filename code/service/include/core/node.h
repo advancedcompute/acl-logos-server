@@ -10,6 +10,8 @@
 #include <grpc++/security/server_credentials.h>
 #include <librdkafka/rdkafkacpp.h>
 
+#include "soci/soci.h"
+
 #include <memory>
 #include <vector>
 #include <map>
@@ -34,7 +36,9 @@ namespace acl { namespace logos { namespace core {
     {
         public:
             BlockchainNode() = default;
-            virtual ~BlockchainNode() = default;
+            virtual ~BlockchainNode() {
+                Shutdown();
+            }
 
             
             bool Initialize(const LogosSvcSettings& settings);
@@ -44,6 +48,26 @@ namespace acl { namespace logos { namespace core {
             const std::vector<std::shared_ptr<spdlog::logger>> Loggers() { return _loggers; }
 
 
+            void LogMessage(const std::string& msg, spdlog::level::level_enum level = spdlog::level::info) {
+                for(auto& logger : Loggers())
+                {
+                    switch(level)
+                    {
+                        case spdlog::level::critical:
+                            logger->critical(msg); break;
+                        case spdlog::level::err:
+                            logger->error(msg); break;
+                        case spdlog::level::warn:
+                            logger->warn(msg); break;
+                        case spdlog::level::info:
+                            logger->info(msg); break;
+                        case spdlog::level::debug:
+                            logger->debug(msg); break;
+                        case spdlog::level::trace:
+                            logger->trace(msg); break;
+                    }
+                }
+            }
 
 
         private:
@@ -69,6 +93,7 @@ namespace acl { namespace logos { namespace core {
             LogosSvcSettings _settings;
             std::unique_ptr<grpc::Server> _serverInstance = nullptr;
             std::shared_ptr<grpc::ServerCredentials> _credentials;
+            std::shared_ptr<soci::session> _sqlSession;
 
             std::vector<std::shared_ptr<spdlog::logger>> _loggers;
             bool _initialized = false;

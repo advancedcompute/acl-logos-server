@@ -5,6 +5,8 @@
 
 #include "ecc.h"
 #include "ed25519.h"
+#include "certificate.h"
+#include "certificate_builder.h"
 
 namespace acl { namespace logos { namespace core {
 
@@ -25,8 +27,12 @@ namespace acl { namespace logos { namespace core {
             "ecc", "ed25519"
         };
 
+        std::vector<std::string> permittedDatabaseEngines = {
+            "mysql", "postgresql", "sqlite3"
+        };
+
         // Validating log settings
-        for(auto logConfig: config.log_settings)
+        for(const auto& logConfig: config.log_settings)
         {
             if(logConfig.name.empty())
             {
@@ -55,7 +61,7 @@ namespace acl { namespace logos { namespace core {
                 ++errorCount;
             } else {
                 auto log_output_it = std::find(permittedOutputTypes.begin(), permittedOutputTypes.end(), logConfig.output);
-                if(log_output_it == permittedOutputTypes.end()) {
+                if(log_output_it == permittedOutputTypes.end()) { 
                     getCallback()("log.output", logConfig.output,
                         cpp::utils::stringFormat("Log output is not permitted.\n Value must be one of: %s",
                             cpp::utils::listConcat(permittedOutputTypes, ", ", "", ""))
@@ -245,15 +251,26 @@ namespace acl { namespace logos { namespace core {
                 ++errorCount;
             } else {
                 // TODO: Load file
-                
+                if( cpp::utils::file_exists(config.identity_settings.certificate.ca_path) )
+                {
+
+                } else {
+                    // Error   
+                }
             }
 
             if(config.identity_settings.certificate.cert_path.empty())
             {
-                getCallback()("identity.certificate.private_key_path", "<empty>", "Identity keypair private_key_path must be set");
+                getCallback()("identity.certificate.cert_path", "<empty>", "Identity keypair cert_path must be set");
                 ++errorCount;
             } else {
                 // TODO: Load file
+                if( cpp::utils::file_exists(config.identity_settings.certificate.cert_path) )
+                {
+
+                } else {
+                    // Error   
+                }
             }
 
             if(config.identity_settings.certificate.key_path.empty())
@@ -262,6 +279,12 @@ namespace acl { namespace logos { namespace core {
                 ++errorCount;
             } else {
                 // TODO: Load file
+                if( cpp::utils::file_exists(config.identity_settings.certificate.key_path) )
+                {
+
+                } else {
+                    // Error   
+                }
             }
         }
 
@@ -271,6 +294,16 @@ namespace acl { namespace logos { namespace core {
         {
             getCallback()("database.engine", "<empty>", "Database engine must be set");
             ++errorCount;
+        } else {
+            auto found_db_engine_it = std::find(permittedDatabaseEngines.begin(), permittedDatabaseEngines.end(), config.database_settings.engine);
+            if(found_db_engine_it == permittedDatabaseEngines.end())
+            {
+                getCallback()("database.engine", config.database_settings.engine,
+                        cpp::utils::stringFormat("Database engine must be a supported value.\n Supported values are: %s",
+                            cpp::utils::listConcat(permittedDatabaseEngines, ", ", "", ""))
+                    );
+                    ++errorCount;
+            }
         }
 
         if(config.database_settings.host.empty())
@@ -292,7 +325,13 @@ namespace acl { namespace logos { namespace core {
                 getCallback()("database.certificate.ca_path", "<empty>", "Database certificate ca_path must be set");
                 ++errorCount;
             } else {
-                // TODO: Load file and ca data
+                // TODO: Load file
+                if( cpp::utils::file_exists(config.identity_settings.certificate.ca_path) )
+                {
+                    
+                } else {
+                    // Error   
+                }
             }
 
             if(config.database_settings.certificate.cert_path.empty())
@@ -301,6 +340,12 @@ namespace acl { namespace logos { namespace core {
                 ++errorCount;
             } else {
                 // TODO: Load file
+                if( cpp::utils::file_exists(config.identity_settings.certificate.cert_path) )
+                {
+
+                } else {
+                    // Error   
+                }
             }
 
             if(config.database_settings.certificate.key_path.empty())
@@ -309,6 +354,12 @@ namespace acl { namespace logos { namespace core {
                 ++errorCount;
             } else {
                 // TODO: Load file
+                if( cpp::utils::file_exists(config.identity_settings.certificate.key_path) )
+                {
+
+                } else {
+                    // Error   
+                }
             }
         }
 

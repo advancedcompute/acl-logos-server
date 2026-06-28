@@ -3,5 +3,6 @@ build/
 *credentials.json
 .env
 .env.yaml
+etc/cloud.settings.json
 
 code/service/include/core/constants.h

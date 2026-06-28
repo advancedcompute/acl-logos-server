@@ -48,6 +48,9 @@ namespace acl { namespace logos { namespace core {
         auto engine_json = database_json[settings_obj.database_settings.engine];
         settings_obj.database_settings.host = engine_json["host"].asString();
         settings_obj.database_settings.port = engine_json["port"].asInt();
+        settings_obj.database_settings.database = engine_json["db"].asString();
+        settings_obj.database_settings.username = engine_json["user"].asString();
+        settings_obj.database_settings.password = engine_json["password"].asString();
         settings_obj.database_settings.certificate.use_tls = engine_json["certificate"]["use_tls"].asBool();
         settings_obj.database_settings.certificate.cert_path = engine_json["certificate"]["cert_path"].asString();
         settings_obj.database_settings.certificate.key_path = engine_json["certificate"]["key_path"].asString();

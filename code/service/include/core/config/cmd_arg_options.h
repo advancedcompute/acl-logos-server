@@ -73,6 +73,9 @@ namespace acl { namespace logos { namespace core {
         public:
             std::string engine;
             std::string host;
+            std::string database;
+            std::string username;
+            std::string password;
             int port;
             Certificate certificate;
     };

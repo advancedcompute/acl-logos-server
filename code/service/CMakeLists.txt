@@ -50,6 +50,12 @@ include_directories(
     ${PROJECT_LIBCPPUTILS_ROOT}/code/lib/include
     ${PROJECT_SPDLOG_ROOT}/include
     /usr/include/jsoncpp/
+    /usr/include/mysql/                 # Needed for soci
+)
+
+link_directories(
+    /lib/x86_64-linux-gnu/
+
 )
 
 set(LIBS_LINK
@@ -57,7 +63,12 @@ set(LIBS_LINK
     -lprotobuf
     -lgrpc++
     -ljsoncpp
+    -lsoci_core
     -lsoci_mysql
+    -lsoci_postgresql       # TODO: Put these behind conditional compilation flags.
+    -lsoci_sqlite3
+    -ldl
+    -lmysqlclient
     cpputils
     #-lspdlog
     -lstdc++fs)

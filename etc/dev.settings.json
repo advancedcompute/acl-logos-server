@@ -4,24 +4,25 @@
             "name": "console",
             "level": "info",
             "output": "console",
-            "pattern": "[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %v"
+            "pattern": "[%H:%M:%S %z] [%n] [thread %t] %v"
         },
         {
             "name": "rotation-log",
-            "level": "warn",
+            "level": "info",
             "output": "rotating-file",
-            "output-path": "~/.config/acl/logos/node/logs/svc-rot.log",
-            "pattern": "[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %v",
+            "output-path": "~/.config/acl/logos/node/logs/svc-rotation.log",
+            "pattern": "[%H:%M:%S %z] [%n] [thread %t] %v",
             "max-size": 1073741824,
             "max-files": 10
         },
         {
             "name": "daily-log",
-            "level": "critical",
+            "level": "info",
             "output": "daily-file",
             "output-path": "~/.config/acl/logos/node/logs/svc-daily.log",
             "pattern": "[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %v",
-            "restart-time": "00:00"
+            "restart-time": "00:00",
+            "max-files": 10
         }
     ],
     "identity": {
@@ -33,7 +34,7 @@
             "public_key_path": "~/.config/acl/logos/node/keys/id_ed25519.pub"
         },
         "certificate": {
-            "use_tls": true,
+            "use_tls": false,
             "cert_path": "~/.config/acl/logos/node/tls/cert.pem",
             "key_path": "~/.config/acl/logos/node/tls/key.pem",
             "ca_path": "~/.config/acl/logos/node/tls/ca.pem"
