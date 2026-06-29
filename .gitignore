@@ -3,7 +3,7 @@ build/
 *credentials.json
 .env
 .env.yaml
-etc/cloud.settings.json
+etc/*.settings.json
 code/service/include/core/constants.h
 
 .grpc_generated/

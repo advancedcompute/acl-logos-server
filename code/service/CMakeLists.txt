@@ -21,6 +21,7 @@ set(PRODUCT_NAME "acl.logos.svc")
 file(GLOB PROJECT_SRC_FILESET
     ${PROJECT_SRC_DIR}/*.cpp
     ${PROJECT_SRC_DIR}/**/*.cpp
+    ${PROJECT_SRC_DIR}/**/**/**/*.cc
     ${PROJECT_SRC_DIR}/**/**/*.cpp
 )
 message(STATUS "PROJECT_SRC_FILESET : ${PROJECT_SRC_FILESET}")
@@ -48,6 +49,8 @@ configure_file(${PROJECT_INC_DIR}/core/constants.h.in ${PROJECT_INC_DIR}/core/co
 include_directories(
     ${PROJECT_INC_DIR}
     ${PROJECT_LIBCPPUTILS_ROOT}/code/lib/include
+    ${PROJECT_INC_DIR}/include
+    ${PROJECT_INC_DIR}/core/rpc/generated
     ${PROJECT_SPDLOG_ROOT}/include
     /usr/include/jsoncpp/
     /usr/include/mysql/                 # Needed for soci
@@ -59,9 +62,11 @@ link_directories(
 )
 
 set(LIBS_LINK
+    -labsl_synchronization
     -lrdkafka++
     -lprotobuf
     -lgrpc++
+    -lgpr
     -ljsoncpp
     -lsoci_core
     -lsoci_mysql
