@@ -5,27 +5,27 @@
 
 #include "core/config/cmd_arg_options.h"
 #include "core/interfaces/blockchain_node.h"
-#include "core/rpc/generated/status.grpc.pb.h"
+#include "core/rpc/generated/identity.grpc.pb.h"
 
 using grpc::ServerContext;
 using google::protobuf::Empty;
 
 namespace acl { namespace logos { namespace core { namespace rpc {
 
-    class StatusService final:
+    class IdentityService final:
         public acl::logos::core::iblockchain_node_service<LogosSvcSettings>,
-        public acl::rpc::Status::Service
+        public acl::rpc::Identity::Service
     {
     public:
-        explicit StatusService(iblockchain_node<LogosSvcSettings> * nodePtr):
-            acl::rpc::Status::Service(),
+        explicit IdentityService(iblockchain_node<LogosSvcSettings> * nodePtr):
+            acl::rpc::Identity::Service(),
             iblockchain_node_service(nodePtr, this)
         {
 
         }
-        ~StatusService() override {}
+        ~IdentityService() override {}
 
-        grpc::Status Up(ServerContext * context, const Empty * request, acl::rpc::StatusInfo * response) override;
+        grpc::Status Issue(ServerContext * context, const acl::rpc::IdentityIssueRequest * request, acl::rpc::IdentityIssueResponse * response) override;
 
     private:
     };

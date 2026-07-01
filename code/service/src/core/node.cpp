@@ -29,7 +29,7 @@ namespace acl { namespace logos { namespace core {
                 initializeGRPCServer(settings);
             
                 if(_initialized)
-                    _settings = settings;
+                    Settings() = settings;
         } else {
             std::cout << " - BlockchainNode already initialized\n";
         }
@@ -39,11 +39,10 @@ namespace acl { namespace logos { namespace core {
     void BlockchainNode::Run()
     {
         if(_initialized) {
-            if(_serverInstance == nullptr) {
-                LogMessage("Starting up new blockchain");
-
+            if(_serverInstance == nullptr)
+            {
                 std::stringstream ss;
-                ss << _settings.grpc_settings.address << ":" << _settings.grpc_settings.port;
+                ss << Settings().grpc_settings.address << ":" << Settings().grpc_settings.port;
 
                 grpc::ServerBuilder builder;
                 if(_initialized) {
@@ -58,13 +57,13 @@ namespace acl { namespace logos { namespace core {
                     }
 
                     grpc::ResourceQuota resourceQuota;
-                    resourceQuota.SetMaxThreads(_settings.grpc_settings.max_thread_count);
+                    resourceQuota.SetMaxThreads(Settings().grpc_settings.max_thread_count);
                     builder.SetResourceQuota(resourceQuota);
 
                     //printf("Listening: %s\n", serverAddress.c_str());
-                    LogMessage(cpp::utils::stringFormat("GRPC server listening on %d threads at %s:%d", 
-                        _settings.grpc_settings.max_thread_count, _settings.grpc_settings.address.c_str(),
-                        _settings.grpc_settings.port));
+                    LogMessage(cpp::utils::stringFormat("GRPC server listening on up to %d threads at %s:%d", 
+                        Settings().grpc_settings.max_thread_count, Settings().grpc_settings.address.c_str(),
+                        Settings().grpc_settings.port));
 
                     _grpcServerThread = std::thread([&]() {
                         _serverInstance = builder.BuildAndStart();
@@ -93,8 +92,8 @@ namespace acl { namespace logos { namespace core {
             _serverInstance->Shutdown();
         }
 
-        _sqlSession.reset();
-        _loggers.clear();
+        SQLSession().reset();
+        Loggers().clear();
     }
 
     bool BlockchainNode::initializeGRPCServer(const LogosSvcSettings& settings)
@@ -138,7 +137,7 @@ namespace acl { namespace logos { namespace core {
         _nodeServiceVect.clear();
         _nodeServiceMap.clear();
 
-        auto statusService = std::shared_ptr<acl::logos::core::rpc::StatusService>(new acl::logos::core::rpc::StatusService);
+        auto statusService = std::shared_ptr<acl::logos::core::rpc::StatusService>(new acl::logos::core::rpc::StatusService(this));
         _nodeServiceVect.push_back(statusService);
         _nodeServiceMap["status"] = statusService;
 
@@ -147,7 +146,7 @@ namespace acl { namespace logos { namespace core {
 
     bool BlockchainNode::initializeLogging(const LogosSvcSettings& settings)
     {
-        _loggers.clear();
+        Loggers().clear();
         for(const auto& logSettings : settings.log_settings)
         {
             std::shared_ptr<spdlog::logger> logPtr;
@@ -181,14 +180,14 @@ namespace acl { namespace logos { namespace core {
                 logPtr->set_level(spdlog::level::critical);
             }
             logPtr->set_pattern(logSettings.pattern);
-            _loggers.push_back(logPtr);
+            Loggers().push_back(logPtr);
         }
 
-        if(_loggers.size() == settings.log_settings.size()) {
+        if(Loggers().size() == settings.log_settings.size()) {
             LogMessage("Loggers have been successfully initialized");
             return true;
         } else {
-            LogMessage("Loggers have been initialized", spdlog::level::warn);
+            LogMessage("Loggers have not all been initialized", spdlog::level::warn);
             return false;
         }
     }
@@ -216,7 +215,7 @@ namespace acl { namespace logos { namespace core {
 
         if(settings.database_settings.engine == "mysql") {
             try {
-                _sqlSession = std::make_shared<soci::session>(
+                SQLSession() = std::make_shared<soci::session>(
                     soci::session(soci::mysql, ss.str())
                 );
                 success = true;
@@ -226,7 +225,7 @@ namespace acl { namespace logos { namespace core {
 
         } else if(settings.database_settings.engine == "postgresql") {
             try {
-                _sqlSession = std::make_shared<soci::session>(
+                SQLSession() = std::make_shared<soci::session>(
                     soci::session(soci::postgresql, ss.str())
                 );
                 success = true;
@@ -235,7 +234,7 @@ namespace acl { namespace logos { namespace core {
             }
         }  else if(settings.database_settings.engine == "sqlite3") {
             try {
-                _sqlSession = std::make_shared<soci::session>(
+                SQLSession() = std::make_shared<soci::session>(
                     soci::session(soci::sqlite3, ss.str())
                 );
                 success = true;

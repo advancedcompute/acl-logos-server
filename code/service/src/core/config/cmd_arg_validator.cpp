@@ -223,7 +223,7 @@ namespace acl { namespace logos { namespace core {
             id_key_type = config.identity_settings.keypair.type;    // Save for later use
             if(config.identity_settings.keypair.type == "ecc") {
                 errorCount += validateECCIdentityKey(config, identity_ecc_key);
-            } else if(config.identity_settings.keypair.type == "ed") {
+            } else if(config.identity_settings.keypair.type == "ed25519") {
                 errorCount += validateEDIdentityKey(config, identity_ed_key);
             } else if(config.identity_settings.keypair.type == "rsa") {
                 errorCount += validateRSAIdentityKey(config, identity_rsa_key);
@@ -332,41 +332,39 @@ namespace acl { namespace logos { namespace core {
         int errorCount = 0;
 
         if(cpp::utils::file_exists(config.identity_settings.keypair.private_key_path) &&
-                    cpp::utils::file_exists(config.identity_settings.keypair.public_key_path))
-                {
-                    if(!key.load_own_private_key_from_pem_file(config.identity_settings.keypair.private_key_path))
-                    {
-                        getCallback()("identity.keypair.private_key_path", config.identity_settings.keypair.private_key_path, \
-                            "Failed to load private key from file");
-                        ++errorCount;
-                    }
+            cpp::utils::file_exists(config.identity_settings.keypair.public_key_path))
+        {
+            if(!key.load_own_private_key_from_pem_file(config.identity_settings.keypair.private_key_path))
+            {
+                getCallback()("identity.keypair.private_key_path", config.identity_settings.keypair.private_key_path, \
+                    "Failed to load private key from file");
+                ++errorCount;
+            }
 
-                    if(!key.load_own_public_key_from_pem_file(config.identity_settings.keypair.public_key_path))
-                    {
-                        getCallback()("identity.keypair.public_key_path", config.identity_settings.keypair.public_key_path, \
-                            "Failed to load public key from file");
-                        ++errorCount;
-                    }
-                } else {
-                    auto privkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.private_key_path);
-                    auto pubkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.public_key_path);
+            if(!key.load_own_public_key_from_pem_file(config.identity_settings.keypair.public_key_path))
+            {
+                getCallback()("identity.keypair.public_key_path", config.identity_settings.keypair.public_key_path, \
+                    "Failed to load public key from file");
+                ++errorCount;
+            }
+        } else {
+            auto privkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.private_key_path);
+            auto pubkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.public_key_path);
 
-                    cpp::utils::create_directories(privkey_path.parent_path());
-                    cpp::utils::create_directories(pubkey_path.parent_path());
+            cpp::utils::create_directories(privkey_path.parent_path());
+            cpp::utils::create_directories(pubkey_path.parent_path());
 
-                    config.identity_settings.keypair.private_key_path = privkey_path;
-                    config.identity_settings.keypair.public_key_path = pubkey_path;
+            config.identity_settings.keypair.private_key_path = privkey_path;
+            config.identity_settings.keypair.public_key_path = pubkey_path;
                     
-                    if( !key.generate_own_keypair() ||
-                        !key.export_private_key(config.identity_settings.keypair.private_key_path) ||
-                        !key.export_public_key(config.identity_settings.keypair.public_key_path) )
-                    {
-                        // Error
-                        getCallback()("identity.keypair", "<Saving to disk>", "Failed to save public and private keypair files to disk");
-                        ++errorCount;
-                    }
-                }
-
+            if( !(key.generate_own_keypair() && key.export_private_key(config.identity_settings.keypair.private_key_path) && 
+                key.export_public_key(config.identity_settings.keypair.public_key_path)) )
+            {
+                // Error
+                getCallback()("identity.keypair", "<Saving to disk>", "Failed to save public and private keypair files to disk");
+                ++errorCount;
+            }
+        }
         return errorCount;
     }
 
@@ -399,9 +397,8 @@ namespace acl { namespace logos { namespace core {
             config.identity_settings.keypair.private_key_path = privkey_path;
             config.identity_settings.keypair.public_key_path = pubkey_path;
                     
-            if( !key.generate_keypair() ||
-                !key.export_private_key(config.identity_settings.keypair.private_key_path) ||
-                !key.export_public_key(config.identity_settings.keypair.public_key_path) )
+            if( !(key.generate_keypair() && key.export_private_key(config.identity_settings.keypair.private_key_path) &&
+                key.export_public_key(config.identity_settings.keypair.public_key_path)) )
             {
                 // Error
                 getCallback()("identity.keypair", "<Saving to disk>", "Failed to save public and private keypair files to disk");
@@ -441,9 +438,8 @@ namespace acl { namespace logos { namespace core {
             config.identity_settings.keypair.private_key_path = privkey_path;
             config.identity_settings.keypair.public_key_path = pubkey_path;
                     
-            if( !key.generate_keypair() ||
-                !key.export_private_key(config.identity_settings.keypair.private_key_path) ||
-                !key.export_public_key(config.identity_settings.keypair.public_key_path) )
+            if( !(key.generate_keypair() && key.export_private_key(config.identity_settings.keypair.private_key_path) &&
+                key.export_public_key(config.identity_settings.keypair.public_key_path)) )
             {
                 // Error
                 getCallback()("identity.keypair", "<Saving to disk>", "Failed to save public and private keypair files to disk");
