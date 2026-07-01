@@ -1,0 +1,13 @@
+{
+  "details": {
+    "methodFqn": "acl.rpc.Identity.Revoke"
+  },
+  "requests": [
+    {
+      "location": "Revoke-request.json"
+    }
+  ],
+  "operationType": "unary",
+  "invokerName": "grpc",
+  "importStreamId": "d4f1fbe8-1f21-4e5a-bd33-7a53d793d86f"
+}

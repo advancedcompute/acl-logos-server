@@ -68,6 +68,18 @@ namespace acl { namespace logos { namespace core {
             int port;
     };
 
+    struct GrpcConfig
+    {
+        public:
+            std::string address;
+            int port;
+            int max_thread_count = 10;
+            int max_message_size_mb;
+            int keep_alive_time_ms;
+            int keep_alive_timeout_ms;
+            Certificate tls;
+    };
+
     struct DatabaseConfig
     {
         public:
@@ -87,6 +99,7 @@ namespace acl { namespace logos { namespace core {
             IdentityConfig  identity_settings;
             std::vector<LoggerConfig> log_settings;
             DatabaseConfig  database_settings;
+            GrpcConfig      grpc_settings;
     };
 
 

@@ -35,9 +35,9 @@
         },
         "certificate": {
             "use_tls": false,
-            "cert_path": "~/.config/acl/logos/node/tls/cert.pem",
-            "key_path": "~/.config/acl/logos/node/tls/key.pem",
-            "ca_path": "~/.config/acl/logos/node/tls/ca.pem"
+            "cert_path": "~/.config/acl/logos/node/tls/id.cert.pem",
+            "key_path": "~/.config/acl/logos/node/tls/id.key.pem",
+            "ca_path": "~/.config/acl/logos/node/tls/id.ca.pem"
         }
     },
     "network": {
@@ -151,19 +151,18 @@
         }
     },
     "grpc": {
-        "listen_address": "0.0.0.0:50051",
+        "address": "0.0.0.0",
+        "port": 50051,
         "max_message_size_mb": 64,
-        "keepalive": {
-            "time_ms": 30000,
-            "timeout_ms": 10000
-        },
+        "keep_alive_time_ms": 30000,
+        "keep_alive_timeout_ms": 10000,
         "tls": {
             "enabled": true,
-            "cert_path": "~/.config/logos/node/grpc/cert_path.pem",
-            "key_path": "~/.config/logos/node/grpc/key_path.pem"
+            "cert_path": "~/.config/acl/logos/node/grpc/grpc.cert.pem",
+            "key_path": "~/.config/acl/logos/node/grpc/grpc.key.pem",
+            "ca_path": null
         }
     },
-    "rpc": {},
     "configSync": {
         "enabled": true,
         "mode": "verified_pull",

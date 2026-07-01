@@ -1,0 +1,31 @@
+{
+  "id": "2110fa45-8141-4d3d-bf41-c3397f31ed64",
+  "importStreams": [
+    {
+      "id": "d4f1fbe8-1f21-4e5a-bd33-7a53d793d86f",
+      "name": "proto-file",
+      "importerName": "ProtoFile",
+      "createMissingOperations": true,
+      "options": {
+        "files": [
+          "../../dep/acl-blockchain-proto/protobuf"
+        ],
+        "importPaths": [],
+        "excludedFiles": []
+      }
+    }
+  ],
+  "authConfigs": [],
+  "certificates": [
+    {
+      "id": "e768c159-57af-413a-bd86-bf75362f9ca2",
+      "name": "dev-cert",
+      "type": "key-cert-file",
+      "options": {
+        "keyPath": "~/.config/acl/logos/node/tls/key.pem",
+        "certPath": "~/.config/acl/logos/node/tls/cert.pem"
+      }
+    }
+  ],
+  "proxies": []
+}

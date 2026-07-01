@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     #libsoci-sqlite3-dev \
     librdkafka-dev \
     libssl-dev \
+    libfmt-dev \
     zlib1g-dev \
     curl wget uuid-dev \
     libjsoncpp-dev  \

@@ -2,17 +2,14 @@
 #include "core/config/cmd_arg_validator.h"
 #include "file.h"
 #include "string_helpers.h"
-
-#include "ecc.h"
-#include "ed25519.h"
 #include "certificate.h"
-#include "certificate_builder.h"
+//#include "certificate_builder.h"
 
 namespace acl { namespace logos { namespace core {
 
-
-    int LogosSvcSettingsValidator::validate(LogosSvcSettings& config)
+    int LogosSvcSettingsValidator::validateLogSettings(LogosSvcSettings& config)
     {
+
         int errorCount = 0;
 
         std::vector<std::string> permittedLogLevels = {
@@ -21,14 +18,6 @@ namespace acl { namespace logos { namespace core {
 
         std::vector<std::string> permittedOutputTypes = {
             "console", "rotating-file", "daily-file"
-        };
-
-        std::vector<std::string> permittedKeyTypes = {
-            "ecc", "ed25519"
-        };
-
-        std::vector<std::string> permittedDatabaseEngines = {
-            "mysql", "postgresql", "sqlite3"
         };
 
         // Validating log settings
@@ -114,180 +103,16 @@ namespace acl { namespace logos { namespace core {
 
         }
 
+        return errorCount;
+    }
 
-        if(config.identity_settings.node_id.empty())
-        {
-            getCallback()("identity.node_id", "<empty>", "Identity node ID must be set");
-            ++errorCount;
-        }
+    int LogosSvcSettingsValidator::validateDatabaseSettings(LogosSvcSettings& config)
+    {
+        int errorCount = 0;
 
-        if(config.identity_settings.operator_id.empty())
-        {
-            getCallback()("identity.operator_id", "<empty>", "Identity operator ID must be set");
-            ++errorCount;
-        }
-
-        if(!config.identity_settings.keypair.type.empty())
-        {
-            auto kp_type_it = std::find(permittedKeyTypes.begin(), permittedKeyTypes.end(), config.identity_settings.keypair.type);
-            if(kp_type_it == permittedKeyTypes.end())
-            {
-                getCallback()("identity.keypair.type", config.identity_settings.keypair.type,
-                        cpp::utils::stringFormat("Identity keypair type must be a supported value.\n Supported values are: %s",
-                            cpp::utils::listConcat(permittedKeyTypes, ", ", "", ""))
-                    );
-                    ++errorCount;
-            }
-        } else {
-            config.identity_settings.keypair.type = permittedKeyTypes[0];   // Default to ECC
-        }
-
-        if(!config.identity_settings.keypair.public_key_path.empty())
-        {
-
-            /************************************/
-            if(config.identity_settings.keypair.type == permittedKeyTypes[0])
-            {
-                cpp::utils::ECC identity_kp;
-                if(cpp::utils::file_exists(config.identity_settings.keypair.private_key_path) &&
-                    cpp::utils::file_exists(config.identity_settings.keypair.public_key_path))
-                {
-                    if(!identity_kp.load_own_private_key_from_pem_file(config.identity_settings.keypair.private_key_path))
-                    {
-                        getCallback()("identity.keypair.private_key_path", config.identity_settings.keypair.private_key_path, \
-                            "Failed to load private key from file");
-                        ++errorCount;
-                    }
-
-                    if(!identity_kp.load_own_public_key_from_pem_file(config.identity_settings.keypair.public_key_path))
-                    {
-                        getCallback()("identity.keypair.public_key_path", config.identity_settings.keypair.public_key_path, \
-                            "Failed to load public key from file");
-                        ++errorCount;
-                    }
-                } else {
-                    auto privkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.private_key_path);
-                    auto pubkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.public_key_path);
-
-                    cpp::utils::create_directories(privkey_path.parent_path());
-                    cpp::utils::create_directories(pubkey_path.parent_path());
-
-                    config.identity_settings.keypair.private_key_path = privkey_path;
-                    config.identity_settings.keypair.public_key_path = pubkey_path;
-                    
-                    if( !identity_kp.generate_own_keypair() ||
-                        !identity_kp.export_private_key(config.identity_settings.keypair.private_key_path) ||
-                        !identity_kp.export_public_key(config.identity_settings.keypair.public_key_path) )
-                    {
-                        // Error
-                        getCallback()("identity.keypair", "<Saving to disk>", "Failed to save public and private keypair files to disk");
-                        ++errorCount;
-                    }
-                }
-            }
-
-
-
-            if(config.identity_settings.keypair.type == permittedKeyTypes[1])
-            {
-                cpp::utils::ED25519 identity_kp;
-                if(cpp::utils::file_exists(config.identity_settings.keypair.private_key_path) &&
-                    cpp::utils::file_exists(config.identity_settings.keypair.public_key_path))
-                {
-                    if(!identity_kp.import_private_key(config.identity_settings.keypair.private_key_path))
-                    {
-                        getCallback()("identity.keypair.private_key_path", config.identity_settings.keypair.private_key_path, \
-                            "Failed to load private key from file");
-                        ++errorCount;
-                    }
-
-                    if(!identity_kp.import_public_key(config.identity_settings.keypair.public_key_path))
-                    {
-                        getCallback()("identity.keypair.public_key_path", config.identity_settings.keypair.public_key_path, \
-                            "Failed to load public key from file");
-                        ++errorCount;
-                    }
-                } else {
-                    auto privkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.private_key_path);
-                    auto pubkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.public_key_path);
-
-                    cpp::utils::create_directories(privkey_path.parent_path());
-                    cpp::utils::create_directories(pubkey_path.parent_path());
-
-                    config.identity_settings.keypair.private_key_path = privkey_path;
-                    config.identity_settings.keypair.public_key_path = pubkey_path;
-                    
-                    if( !identity_kp.generate_keypair() ||
-                        !identity_kp.export_private_key(config.identity_settings.keypair.private_key_path) ||
-                        !identity_kp.export_public_key(config.identity_settings.keypair.public_key_path) )
-                    {
-                        // Error
-                        getCallback()("identity.keypair", "<Saving to disk>", "Failed to save public and private keypair files to disk");
-                        ++errorCount;
-                    }
-                }
-            }
-            /************************************/
-
-        } else {
-            getCallback()("identity.keypair.public_key_path", "<empty>", "Identity keypair public_key_path must be set");
-            ++errorCount;
-        }
-
-        if(!config.identity_settings.keypair.private_key_path.empty())
-        {
-            // TODO: Load keys
-        } else {
-            getCallback()("identity.keypair.private_key_path", "<empty>", "Identity keypair private_key_path must be set");
-            ++errorCount;
-        }
-
-        
-        if(config.identity_settings.certificate.use_tls)
-        {
-            if(config.identity_settings.certificate.ca_path.empty())
-            {
-                getCallback()("identity.certificate.ca_path", "<empty>", "Identity certificate ca_path must be set");
-                ++errorCount;
-            } else {
-                // TODO: Load file
-                if( cpp::utils::file_exists(config.identity_settings.certificate.ca_path) )
-                {
-
-                } else {
-                    // Error   
-                }
-            }
-
-            if(config.identity_settings.certificate.cert_path.empty())
-            {
-                getCallback()("identity.certificate.cert_path", "<empty>", "Identity keypair cert_path must be set");
-                ++errorCount;
-            } else {
-                // TODO: Load file
-                if( cpp::utils::file_exists(config.identity_settings.certificate.cert_path) )
-                {
-
-                } else {
-                    // Error   
-                }
-            }
-
-            if(config.identity_settings.certificate.key_path.empty())
-            {
-                getCallback()("identity.certificate.key_path", "<empty>", "Identity keypair key_path must be set");
-                ++errorCount;
-            } else {
-                // TODO: Load file
-                if( cpp::utils::file_exists(config.identity_settings.certificate.key_path) )
-                {
-
-                } else {
-                    // Error   
-                }
-            }
-        }
-
+        std::vector<std::string> permittedDatabaseEngines = {
+            "mysql", "postgresql", "sqlite3"
+        };
 
         // Database settings
         if(config.database_settings.engine.empty())
@@ -325,12 +150,10 @@ namespace acl { namespace logos { namespace core {
                 getCallback()("database.certificate.ca_path", "<empty>", "Database certificate ca_path must be set");
                 ++errorCount;
             } else {
-                // TODO: Load file
-                if( cpp::utils::file_exists(config.database_settings.certificate.ca_path) )
-                {
-                    
-                } else {
-                    // Error   
+                cpp::utils::Certificate cert;
+                if(!cert.load_pem_file(config.database_settings.certificate.ca_path)) {
+                    getCallback()("database.certificate.ca_path", "<Loading from disk>", "Failed to load certificate CA file from disk");
+                    ++errorCount;
                 }
             }
 
@@ -339,12 +162,10 @@ namespace acl { namespace logos { namespace core {
                 getCallback()("database.certificate.cert_path", "<empty>", "Database certificate cert_path must be set");
                 ++errorCount;
             } else {
-                // TODO: Load file
-                if( cpp::utils::file_exists(config.database_settings.certificate.cert_path) )
-                {
-
-                } else {
-                    // Error   
+                cpp::utils::Certificate cert;
+                if(!cert.load_pem_file(config.database_settings.certificate.cert_path)) {
+                    getCallback()("database.certificate.cert_path", "<Loading from disk>", "Failed to load certificate cert file from disk");
+                    ++errorCount;
                 }
             }
 
@@ -353,20 +174,294 @@ namespace acl { namespace logos { namespace core {
                 getCallback()("database.certificate.key_path", "<empty>", "Database certificate key_path must be set");
                 ++errorCount;
             } else {
-                // TODO: Load file
-                if( cpp::utils::file_exists(config.database_settings.certificate.key_path) )
-                {
+                cpp::utils::Certificate cert;
 
-                } else {
-                    // Error   
+                //printf("config.database_settings.certificate.key_path: %s\n", config.database_settings.certificate.key_path.c_str());
+                if(!cert.load_pem_file(config.database_settings.certificate.key_path)) {
+                    //getCallback()("database.certificate.key_path", "<Loading from disk>", "Failed to load certificate key file from disk");
+                    //++errorCount;
+                }
+            }
+        }
+
+        return errorCount;
+    }
+
+    int LogosSvcSettingsValidator::validateIdentitySettings(LogosSvcSettings& config)
+    {
+        int errorCount = 0;
+
+        if(config.identity_settings.node_id.empty())
+        {
+            getCallback()("identity.node_id", "<empty>", "Identity node ID must be set");
+            ++errorCount;
+        }
+
+        if(config.identity_settings.operator_id.empty())
+        {
+            getCallback()("identity.operator_id", "<empty>", "Identity operator ID must be set");
+            ++errorCount;
+        }
+
+        if(!config.identity_settings.keypair.type.empty())
+        {
+            auto kp_type_it = std::find(permittedKeyTypes.begin(), permittedKeyTypes.end(), config.identity_settings.keypair.type);
+            if(kp_type_it == permittedKeyTypes.end())
+            {
+                getCallback()("identity.keypair.type", config.identity_settings.keypair.type,
+                        cpp::utils::stringFormat("Identity keypair type must be a supported value.\n Supported values are: %s",
+                            cpp::utils::listConcat(permittedKeyTypes, ", ", "", ""))
+                    );
+                    ++errorCount;
+            }
+        } else {
+            config.identity_settings.keypair.type = "ecc";   // Default to ECC
+        }
+
+        if(!config.identity_settings.keypair.public_key_path.empty())
+        {
+            id_key_type = config.identity_settings.keypair.type;    // Save for later use
+            if(config.identity_settings.keypair.type == "ecc") {
+                errorCount += validateECCIdentityKey(config, identity_ecc_key);
+            } else if(config.identity_settings.keypair.type == "ed") {
+                errorCount += validateEDIdentityKey(config, identity_ed_key);
+            } else if(config.identity_settings.keypair.type == "rsa") {
+                errorCount += validateRSAIdentityKey(config, identity_rsa_key);
+            }
+        } else {
+            getCallback()("identity.keypair.public_key_path", "<empty>", "Identity keypair public_key_path must be set");
+            ++errorCount;
+        }
+
+        if(!config.identity_settings.keypair.private_key_path.empty())
+        {
+            // TODO: Load keys
+        } else {
+            getCallback()("identity.keypair.private_key_path", "<empty>", "Identity keypair private_key_path must be set");
+            ++errorCount;
+        }
+
+        
+        if(config.identity_settings.certificate.use_tls)
+        {
+            if(config.identity_settings.certificate.ca_path.empty())
+            {
+                getCallback()("identity.certificate.ca_path", "<empty>", "Identity certificate ca_path must be set");
+                ++errorCount;
+            } else {
+                cpp::utils::Certificate cert;
+                if(!cert.load_pem_file(config.identity_settings.certificate.ca_path)) {
+                    getCallback()("identity.certificate.ca_path", "<Loading from disk>", "Failed to load certificate CA file from disk");
+                    ++errorCount;
+                }
+            }
+
+            if(config.identity_settings.certificate.cert_path.empty())
+            {
+                getCallback()("identity.certificate.cert_path", "<empty>", "Identity keypair cert_path must be set");
+                ++errorCount;
+            } else {
+                cpp::utils::Certificate cert;
+                if(!cert.load_pem_file(config.identity_settings.certificate.cert_path)) {
+                    getCallback()("identity.certificate.cert_path", "<Loading from disk>", "Failed to load certificate cert file from disk");
+                    ++errorCount;
+                }
+            }
+
+            if(config.identity_settings.certificate.key_path.empty())
+            {
+                getCallback()("identity.certificate.key_path", "<empty>", "Identity keypair key_path must be set");
+                ++errorCount;
+            } else {
+                cpp::utils::Certificate cert;
+                if(!cert.load_pem_file(config.identity_settings.certificate.cert_path)) {
+                    getCallback()("identity.certificate.key_path", "<Loading from disk>", "Failed to load certificate key file from disk");
+                    ++errorCount;
+                }
+            }
+        }
+
+        return errorCount;
+    }
+
+    int LogosSvcSettingsValidator::validateGrpcSettings(LogosSvcSettings& config)
+    {
+        int errorCount = 0;
+        if(config.grpc_settings.address.empty()) {
+            getCallback()("grpc.address", "<empty>", "GRPC address must be set");
+            ++errorCount;
+        }
+
+        // TODO: Validate other fields
+        if(config.grpc_settings.tls.use_tls) {
+            if(config.grpc_settings.tls.key_path.empty())
+            {
+                getCallback()("grpc.certificate.key_path", "<empty>", "Grpc certificate key_path must be set");
+                ++errorCount;
+            } else {
+                cpp::utils::Certificate cert;
+                if(!cert.load_pem_file(config.grpc_settings.tls.key_path)) {
+                    // TODO: Build certificate and save to disk
+                    //getCallback()("grpc.certificate.key_path", "<Loading from disk>", "Failed to load certificate key file from disk");
+                    //++errorCount;
+                }
+            }
+
+            if(config.grpc_settings.tls.cert_path.empty())
+            {
+                getCallback()("grpc.certificate.cert_path", "<empty>", "Certificate cert_path must be set");
+                ++errorCount;
+            } else {
+                cpp::utils::Certificate cert;
+                if(!cert.load_pem_file(config.grpc_settings.tls.cert_path)) {
+                    // TODO: Build certificate and save to disk
+
+                    //getCallback()("grpc.certificate.cert_path", "<Loading from disk>", "Failed to load certificate cert file from disk");
+                    //++errorCount;
                 }
             }
         }
 
 
+        return errorCount;
+    }
+
+
+    int LogosSvcSettingsValidator::validateECCIdentityKey(LogosSvcSettings& config, cpp::utils::ECC& key)
+    {
+        int errorCount = 0;
+
+        if(cpp::utils::file_exists(config.identity_settings.keypair.private_key_path) &&
+                    cpp::utils::file_exists(config.identity_settings.keypair.public_key_path))
+                {
+                    if(!key.load_own_private_key_from_pem_file(config.identity_settings.keypair.private_key_path))
+                    {
+                        getCallback()("identity.keypair.private_key_path", config.identity_settings.keypair.private_key_path, \
+                            "Failed to load private key from file");
+                        ++errorCount;
+                    }
+
+                    if(!key.load_own_public_key_from_pem_file(config.identity_settings.keypair.public_key_path))
+                    {
+                        getCallback()("identity.keypair.public_key_path", config.identity_settings.keypair.public_key_path, \
+                            "Failed to load public key from file");
+                        ++errorCount;
+                    }
+                } else {
+                    auto privkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.private_key_path);
+                    auto pubkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.public_key_path);
+
+                    cpp::utils::create_directories(privkey_path.parent_path());
+                    cpp::utils::create_directories(pubkey_path.parent_path());
+
+                    config.identity_settings.keypair.private_key_path = privkey_path;
+                    config.identity_settings.keypair.public_key_path = pubkey_path;
+                    
+                    if( !key.generate_own_keypair() ||
+                        !key.export_private_key(config.identity_settings.keypair.private_key_path) ||
+                        !key.export_public_key(config.identity_settings.keypair.public_key_path) )
+                    {
+                        // Error
+                        getCallback()("identity.keypair", "<Saving to disk>", "Failed to save public and private keypair files to disk");
+                        ++errorCount;
+                    }
+                }
+
+        return errorCount;
+    }
+
+    int LogosSvcSettingsValidator::validateEDIdentityKey(LogosSvcSettings& config, cpp::utils::ED25519& key)
+    {
+        int errorCount = 0;
+        if(cpp::utils::file_exists(config.identity_settings.keypair.private_key_path) &&
+            cpp::utils::file_exists(config.identity_settings.keypair.public_key_path))
+        {
+            if(!key.import_private_key(config.identity_settings.keypair.private_key_path))
+            {
+                getCallback()("identity.keypair.private_key_path", config.identity_settings.keypair.private_key_path, \
+                    "Failed to load private key from file");
+                ++errorCount;
+            }
+
+            if(!key.import_public_key(config.identity_settings.keypair.public_key_path))
+            {
+                getCallback()("identity.keypair.public_key_path", config.identity_settings.keypair.public_key_path, \
+                    "Failed to load public key from file");
+                ++errorCount;
+            }
+        } else {
+            auto privkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.private_key_path);
+            auto pubkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.public_key_path);
+
+            cpp::utils::create_directories(privkey_path.parent_path());
+            cpp::utils::create_directories(pubkey_path.parent_path());
+
+            config.identity_settings.keypair.private_key_path = privkey_path;
+            config.identity_settings.keypair.public_key_path = pubkey_path;
+                    
+            if( !key.generate_keypair() ||
+                !key.export_private_key(config.identity_settings.keypair.private_key_path) ||
+                !key.export_public_key(config.identity_settings.keypair.public_key_path) )
+            {
+                // Error
+                getCallback()("identity.keypair", "<Saving to disk>", "Failed to save public and private keypair files to disk");
+                ++errorCount;
+            }
+        }
+        return errorCount;
+    }
+
+    int LogosSvcSettingsValidator::validateRSAIdentityKey(LogosSvcSettings& config, cpp::utils::RSA& key)
+    {
+        int errorCount = 0;
+
+        if(cpp::utils::file_exists(config.identity_settings.keypair.private_key_path) &&
+            cpp::utils::file_exists(config.identity_settings.keypair.public_key_path))
+        {
+            if(!key.import_private_key(config.identity_settings.keypair.private_key_path))
+            {
+                getCallback()("identity.keypair.private_key_path", config.identity_settings.keypair.private_key_path, \
+                    "Failed to load private key from file");
+                ++errorCount;
+            }
+
+            if(!key.import_public_key(config.identity_settings.keypair.public_key_path))
+            {
+                getCallback()("identity.keypair.public_key_path", config.identity_settings.keypair.public_key_path, \
+                    "Failed to load public key from file");
+                ++errorCount;
+            }
+        } else {
+            auto privkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.private_key_path);
+            auto pubkey_path = cpp::utils::full_resolve_path(config.identity_settings.keypair.public_key_path);
+
+            cpp::utils::create_directories(privkey_path.parent_path());
+            cpp::utils::create_directories(pubkey_path.parent_path());
+
+            config.identity_settings.keypair.private_key_path = privkey_path;
+            config.identity_settings.keypair.public_key_path = pubkey_path;
+                    
+            if( !key.generate_keypair() ||
+                !key.export_private_key(config.identity_settings.keypair.private_key_path) ||
+                !key.export_public_key(config.identity_settings.keypair.public_key_path) )
+            {
+                // Error
+                getCallback()("identity.keypair", "<Saving to disk>", "Failed to save public and private keypair files to disk");
+                ++errorCount;
+            }
+        }
+        return errorCount;
+    }
+
+
+    int LogosSvcSettingsValidator::validate(LogosSvcSettings& config)
+    {
+        int errorCount = 0;
         
-
-
+        errorCount += validateLogSettings(config);
+        errorCount += validateIdentitySettings(config);
+        errorCount += validateDatabaseSettings(config);
+        errorCount += validateGrpcSettings(config);
 
         return errorCount;
     }

@@ -1,0 +1,64 @@
+{
+  "identities": [
+    {
+      "id": "862",
+      "email": "{{ faker.internet.example_email }}",
+      "key": "Accountability Prairie",
+      "keyAlgo": "Small Soft Computer salmon superstructure",
+      "issueVersion": 59,
+      "issueNonce": 518,
+      "issueTs": "1970-01-01T00:09:00.000000758Z",
+      "sig": "Moroccan Dirham FTP",
+      "sigHash": "Generic Plastic Chicken Granite capability",
+      "sigHashAlgo": "Personal Loan Account Ergonomic Concrete Table",
+      "wallets": [
+        {
+          "id": "606",
+          "key": "Hollow Architect",
+          "type": "{{ faker.database.type }}",
+          "sig": "enterprise alarm Health, Automotive & Games",
+          "sigHash": "Plain global SSL",
+          "sigHashAlgo": "innovate Texas FTP"
+        },
+        {
+          "id": "716",
+          "key": "schemas leverage",
+          "type": "{{ faker.database.type }}",
+          "sig": "Oklahoma",
+          "sigHash": "Designer Rubber",
+          "sigHashAlgo": "Isle Rustic Wooden Gloves rich"
+        }
+      ]
+    },
+    {
+      "id": "397",
+      "email": "{{ faker.internet.example_email }}",
+      "key": "azure Soft",
+      "keyAlgo": "Saint Helena Investment Account Awesome",
+      "issueVersion": 134,
+      "issueNonce": 263,
+      "issueTs": "1970-01-01T00:06:09.000000074Z",
+      "sig": "Technician primary Dynamic",
+      "sigHash": "Rand Licensed",
+      "sigHashAlgo": "Grocery Integration SDD",
+      "wallets": [
+        {
+          "id": "670",
+          "key": "implementation COM Maryland",
+          "type": "{{ faker.database.type }}",
+          "sig": "Executive USB Cuba",
+          "sigHash": "digital protocol Wooden",
+          "sigHashAlgo": "index card black"
+        },
+        {
+          "id": "166",
+          "key": "Tasty Frozen Mouse",
+          "type": "{{ faker.database.type }}",
+          "sig": "schemas",
+          "sigHash": "Road whiteboard Savings Account",
+          "sigHashAlgo": "Christmas Island"
+        }
+      ]
+    }
+  ]
+}

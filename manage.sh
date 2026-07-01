@@ -34,21 +34,11 @@ function generatePython() {
         mkdir "$2"
     fi;
 
-    declare -a service_filepath_list=$(ls $1/*.proto)
-    declare -a service_filename_list=$(find $1/*.proto -printf "%f\n")
-
-    for service_filepath in $service_filepath_list; do
-        service_full_filename="$(basename $service_filepath)"
-        service_filename="${service_full_filename%.*}"
-        python3 -m grpc_tools.protoc -I $1 --python_out=$2 --grpc_python_out=$2 "$service_filepath"
-
-        # Work around fix to prefix the imports
-        #for svc_filename in $service_filename_list; do
-        #    svc_name="${svc_filename%.*}"
-        #    sed -i "s/import ${svc_name}/import dte.${svc_name}/g" "$2/${service_filename}_pb2_grpc.py"
-        #    sed -i "s/import ${svc_name}/import dte.${svc_name}/g" "$2/${service_filename}_pb2.py"
-        #done
-    done
+    python3 -m grpc_tools.protoc \
+        -I "$1" \
+        --python_out="$2" \
+        --grpc_python_out="$2" \
+        "$1"/*.proto
 }
 
 function generateCpp() {
@@ -65,9 +55,11 @@ function generateCpp() {
 function usage() {
 
     declare -A commands=(
+        ["generate-demo-certs"]="Generate self-signed demo certs"
         ["generate-cpp"]="Generate C++ gRPC interface code for services"
         ["generate-py"]="Generate python gRPC interface code for services"
         ["clean-build"]="Clean build directories"
+        ["clean-demo-certs"]="Clean self-signed demo certs"
         ["clean-code"]="Clean generated code (python & c++)"
         ["clean"]="        Clean certs, generated code & build directories"
         ["help"]="        Display command usage")
@@ -81,12 +73,40 @@ function usage() {
 }
 
 
+if [ "$1" = "generate-demo-certs" ]; then
+    openssl ecparam -name prime256v1 -genkey -noout -out ./etc/demo_ecc_private_key.pem
+    openssl req \
+        -new -key ./etc/demo_ecc_private_key.pem \
+        -out ./etc/demo_ecc_csr.pem \
+        -subj "/C=GB/ST=Cambridgeshire/L=Cambridge/O=ACL/CN=localhost/emailAddress=administrator@advancedcomputation.org.uk"
+    openssl req -x509 -key ./etc/demo_ecc_private_key.pem \
+        -days 365 -out ./etc/demo_ecc_certificate.pem   \
+        -subj "/C=GB/ST=Cambridgeshire/L=Cambridge/O=ACL/CN=localhost/emailAddress=administrator@advancedcomputation.org.uk"
+    openssl pkey -in ./etc/demo_ecc_private_key.pem -pubout -outform pem > ./etc/demo_ecc_public_key.pem
 
-if [ "$1" = "generate-py" ]; then
+    if [ "$2" = 1 ]; then
+        mkdir -p ~/.config/acl/logos/node/tls/
+        cp ./etc/demo_ecc_certificate.pem ~/.config/acl/logos/node/tls/cert.pem
+        cp ./etc/demo_ecc_private_key.pem ~/.config/acl/logos/node/tls/key.pem
+        cp ./etc/demo_ecc_public_key.pem ~/.config/acl/logos/node/tls/ca.pem
+    fi;
+
+elif [ "$1" = "generate-py" ]; then
     if [ ! -d "$script_dir/.grpc_generated/py" ]; then
-        mkdir "$script_dir/.grpc_generated/py"
+        mkdir -p "$script_dir/.grpc_generated/py"
     fi;
     generatePython $script_dir/dep/acl-blockchain-proto/protobuf $script_dir/.grpc_generated/py
+
+    if [ ! -d "$script_dir/.grpc_generated/acl/rpc" ]; then
+        mkdir -p "$script_dir/.grpc_generated/acl/rpc"
+    fi;
+    cp -r $script_dir/.grpc_generated/py/* $script_dir/.grpc_generated/acl/rpc
+
+    # Work around fix to prefix the imports
+    find "$script_dir/.grpc_generated/acl/rpc" -name '*.py' -exec \
+        sed -Ei 's/^import ([a-zA-Z0-9_]+_pb2)( as )?/from . import \1\2/' {} \;
+    find "$script_dir/.grpc_generated/acl/rpc" -name '*.py' -exec \
+        sed -Ei 's/^import ([a-zA-Z0-9_]+_pb2_grpc)( as )?/from . import \1\2/' {} \;
 elif [ "$1" = "generate-cpp" ]; then
     if [ ! -d "$script_dir/.grpc_generated/cpp" ]; then
         mkdir "$script_dir/.grpc_generated/cpp"
@@ -98,6 +118,8 @@ elif [ "$1" == "clean-build" ]; then
     cleanBuildDirs
 elif [ "$1" == "clean-code" ]; then
     cleanGeneratedCode
+elif [ "$1" == "clean-demo-certs" ]; then
+    rm ./etc/demo_ecc_*.pem
 elif [ "$1" == "help" ]; then
     usage
 else

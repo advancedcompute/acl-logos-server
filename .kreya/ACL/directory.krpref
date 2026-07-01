@@ -1,0 +1,12 @@
+{
+  "settings": [
+    {
+      "options": {
+        "grpc": {
+          "endpoint": "advancedcomputation.org.uk:50051",
+          "disableCookies": true
+        }
+      }
+    }
+  ]
+}

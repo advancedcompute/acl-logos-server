@@ -1,0 +1,64 @@
+{
+  "identities": [
+    {
+      "id": "177",
+      "email": "{{ faker.internet.example_email }}",
+      "key": "Rubber Refined Soft Chips Somoni",
+      "keyAlgo": "Unbranded Frozen Pizza",
+      "issueVersion": 630,
+      "issueNonce": 414,
+      "issueTs": "1970-01-01T00:00:36.000000460Z",
+      "sig": "Fresh Convertible Marks",
+      "sigHash": "Expressway SQL mesh",
+      "sigHashAlgo": "Crest Communications Cliffs",
+      "wallets": [
+        {
+          "id": "698",
+          "key": "e-services Senior Awesome Plastic Chips",
+          "type": "{{ faker.database.type }}",
+          "sig": "leading edge",
+          "sigHash": "Gorgeous Wooden Towels project",
+          "sigHashAlgo": "Sleek Small Plastic Hat"
+        },
+        {
+          "id": "803",
+          "key": "Awesome Plastic Chicken blockchains",
+          "type": "{{ faker.database.type }}",
+          "sig": "Tasty Concrete Pizza systemic",
+          "sigHash": "Cross-group withdrawal",
+          "sigHashAlgo": "invoice"
+        }
+      ]
+    },
+    {
+      "id": "998",
+      "email": "{{ faker.internet.example_email }}",
+      "key": "Savings Account Assurance Licensed Granite Table",
+      "keyAlgo": "portals",
+      "issueVersion": 702,
+      "issueNonce": 654,
+      "issueTs": "1970-01-01T00:16:27.000000050Z",
+      "sig": "blue",
+      "sigHash": "upward-trending Nauru",
+      "sigHashAlgo": "Bosnia and Herzegovina",
+      "wallets": [
+        {
+          "id": "152",
+          "key": "Som Villages Incredible",
+          "type": "{{ faker.database.type }}",
+          "sig": "Sleek Plastic Shirt Berkshire web-enabled",
+          "sigHash": "parsing payment Checking Account",
+          "sigHashAlgo": "IB indexing Cambridgeshire"
+        },
+        {
+          "id": "407",
+          "key": "Tunnel",
+          "type": "{{ faker.database.type }}",
+          "sig": "Unbranded Plastic Chicken Bedfordshire Track",
+          "sigHash": "Cedi",
+          "sigHashAlgo": "leading edge Djibouti Franc Specialist"
+        }
+      ]
+    }
+  ]
+}

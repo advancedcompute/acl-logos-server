@@ -6,8 +6,8 @@
 #include "spdlog/logger.h"
 
 #include <grpc++/server.h>
-//#include <grpc++/server_builder.h>
 #include <grpc++/security/server_credentials.h>
+
 #include <librdkafka/rdkafkacpp.h>
 
 #include "soci/soci.h"
@@ -32,6 +32,13 @@ namespace acl { namespace logos { namespace core {
     };
 
 
+    struct RuntimeInstances
+    {
+        std::shared_ptr<soci::session> database;
+
+    };
+
+
     class BlockchainNode: public iblockchain_node
     {
         public:
@@ -44,6 +51,8 @@ namespace acl { namespace logos { namespace core {
             bool Initialize(const LogosSvcSettings& settings);
             void Run();
             void Shutdown();
+
+            std::shared_ptr<grpc::Server>& GRPCServer() { return _serverInstance; }
 
             const std::vector<std::shared_ptr<spdlog::logger>> Loggers() { return _loggers; }
 
@@ -90,11 +99,16 @@ namespace acl { namespace logos { namespace core {
             RdKafka::Metadata * _brokerMetadata = nullptr;
             EventNotificationDeliveryServiceCb _endServiceCb;
             
-            LogosSvcSettings _settings;
-            std::unique_ptr<grpc::Server> _serverInstance = nullptr;
+            // GRPC
+            std::vector<std::shared_ptr<iblockchain_node_service>> _nodeServiceVect;
+            std::map<std::string, std::shared_ptr<iblockchain_node_service>> _nodeServiceMap;
+            std::shared_ptr<grpc::Server> _serverInstance = nullptr;
             std::shared_ptr<grpc::ServerCredentials> _credentials;
-            std::shared_ptr<soci::session> _sqlSession;
+            std::thread _grpcServerThread;
 
+            // DB & Loggers
+            LogosSvcSettings _settings;
+            std::shared_ptr<soci::session> _sqlSession;
             std::vector<std::shared_ptr<spdlog::logger>> _loggers;
             bool _initialized = false;
 

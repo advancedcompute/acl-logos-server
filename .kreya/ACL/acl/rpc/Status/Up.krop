@@ -1,0 +1,15 @@
+{
+  "details": {
+    "methodFqn": "acl.rpc.Status.Up",
+    "disableServerCertificateValidation": true
+  },
+  "requests": [
+    {
+      "location": "Up-request.json"
+    }
+  ],
+  "operationType": "unary",
+  "invokerName": "grpc",
+  "importStreamId": "d4f1fbe8-1f21-4e5a-bd33-7a53d793d86f",
+  "clientCertificateId": "e768c159-57af-413a-bd86-bf75362f9ca2"
+}

@@ -10,17 +10,17 @@ std::unique_ptr<acl::logos::core::BlockchainNode> blockchainNode;
 void sig_handler(int signum)
 {
     std::cout << "Interrupt signal (" << signum << ") received.\n";
-    if(blockchainNode)
+    if(blockchainNode && blockchainNode->GRPCServer())
     {
-        blockchainNode->Shutdown();
+        blockchainNode->GRPCServer()->Shutdown();
     }
 }
 
 int main(int argc, char * argv[])
 {
     signal(SIGINT, sig_handler);
-    signal(SIGABRT, sig_handler);
-    signal(SIGSEGV, sig_handler);
+    //signal(SIGABRT, sig_handler);
+    //signal(SIGSEGV, sig_handler);
     
     acl::logos::core::LogosSvcCMDArgParser cmdArgParser(acl::logos::core::ApplicationInfo(
         PRODUCT_NAME, ORGANIZATION_NAME, PRODUCT_VERSION_STR, PRODUCT_COPYRIGHT_STR, PRODUCT_DESCRIPTION
@@ -32,7 +32,7 @@ int main(int argc, char * argv[])
         blockchainNode = std::unique_ptr<acl::logos::core::BlockchainNode>(new acl::logos::core::BlockchainNode);
         if(blockchainNode->Initialize(cmdArgParser.validatedConfiguration()))
         {
-            //blockchainNode->Run();
+            blockchainNode->Run();
         } else {
             std::cerr << " - Error: BlockchainNode failed during initialization. Please review logs and correct." << std::endl;
         }

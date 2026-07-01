@@ -4,7 +4,10 @@ build/
 .env
 .env.yaml
 etc/*.settings.json
+etc/demo_*.pem
 code/service/include/core/constants.h
+
+__pycache__/
 
 .grpc_generated/
 code/service/include/core/rpc/generated/

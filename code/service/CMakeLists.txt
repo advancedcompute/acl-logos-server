@@ -22,6 +22,7 @@ file(GLOB PROJECT_SRC_FILESET
     ${PROJECT_SRC_DIR}/*.cpp
     ${PROJECT_SRC_DIR}/**/*.cpp
     ${PROJECT_SRC_DIR}/**/**/**/*.cc
+    ${PROJECT_SRC_DIR}/**/**/**/*.cpp
     ${PROJECT_SRC_DIR}/**/**/*.cpp
 )
 message(STATUS "PROJECT_SRC_FILESET : ${PROJECT_SRC_FILESET}")

@@ -56,7 +56,20 @@ namespace acl { namespace logos { namespace core {
         settings_obj.database_settings.certificate.key_path = engine_json["certificate"]["key_path"].asString();
         settings_obj.database_settings.certificate.ca_path = engine_json["certificate"]["ca_path"].asString();
 
+        // grpc settings
+        auto grpc_json = settings_json["grpc"];
+        auto grpc_tls_json = grpc_json["tls"];
+        settings_obj.grpc_settings.address = grpc_json["address"].asString();
+        settings_obj.grpc_settings.port = grpc_json["port"].asInt();
+        settings_obj.grpc_settings.max_thread_count = grpc_json["max_thread_count"].asInt();
+        settings_obj.grpc_settings.max_message_size_mb = grpc_json["max_message_size_mb"].asInt();
+        settings_obj.grpc_settings.keep_alive_time_ms = grpc_json["keep_alive_time_ms"].asInt();
+        settings_obj.grpc_settings.keep_alive_timeout_ms = grpc_json["keep_alive_timeout_ms"].asInt();
+        settings_obj.grpc_settings.tls.use_tls = grpc_tls_json["enabled"].asBool();
+        settings_obj.grpc_settings.tls.cert_path = grpc_tls_json["cert_path"].asString();
+        settings_obj.grpc_settings.tls.key_path = grpc_tls_json["key_path"].asString();
 
+        
 
         return true;
     }
