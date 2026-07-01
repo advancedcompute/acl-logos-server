@@ -107,6 +107,10 @@ elif [ "$1" = "generate-py" ]; then
         sed -Ei 's/^import ([a-zA-Z0-9_]+_pb2)( as )?/from . import \1\2/' {} \;
     find "$script_dir/.grpc_generated/acl/rpc" -name '*.py' -exec \
         sed -Ei 's/^import ([a-zA-Z0-9_]+_pb2_grpc)( as )?/from . import \1\2/' {} \;
+    
+    # Add __init__.py files
+    touch $script_dir/.grpc_generated/acl/__init__.py
+    touch $script_dir/.grpc_generated/acl/rpc/__init__.py
 elif [ "$1" = "generate-cpp" ]; then
     if [ ! -d "$script_dir/.grpc_generated/cpp" ]; then
         mkdir "$script_dir/.grpc_generated/cpp"

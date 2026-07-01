@@ -8,7 +8,8 @@ etc/demo_*.pem
 code/service/include/core/constants.h
 
 __pycache__/
-
 .grpc_generated/
+code/python/acl/
+
 code/service/include/core/rpc/generated/
 code/service/src/core/rpc/generated/
