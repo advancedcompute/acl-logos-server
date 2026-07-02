@@ -9,13 +9,13 @@
 #include "string_helpers.h"
 #include "base64.h"
 #include "file.h"
-#include "hash.h"
+//#include "hash.h"
 #include "uuid.h"
 #include "macros.h"
 
 namespace acl { namespace logos { namespace core { namespace rpc {
 
-    grpc::Status StatusService::Up(ServerContext * context, const Empty * request, acl::rpc::StatusInfo * response)
+    grpc::Status StatusService::Up(grpc::ServerContext * context, const google::protobuf::Empty * request, acl::rpc::v1::StatusInfo * response)
     {
         BCService()->LogMessage(cpp::utils::stringFormat("Service request: %s::%s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__));
 

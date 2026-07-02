@@ -4,10 +4,11 @@
 #include <chrono>
 #include <type_traits>
 #include <grpc++/grpc++.h>
-#include "soci/soci.h"
 
 #include <spdlog/spdlog.h>
 #include <vector>
+
+#include "core/interfaces/database.h"
 
 namespace acl { namespace logos { namespace core {
 
@@ -15,8 +16,6 @@ namespace acl { namespace logos { namespace core {
     class iblockchain_node
     {
         public:
-
-            std::shared_ptr<soci::session>& SQLSession() { return _sql_session; }
 
             iblockchain_node() {
                 _start_time = std::chrono::system_clock::now();
@@ -27,6 +26,8 @@ namespace acl { namespace logos { namespace core {
             std::vector<std::shared_ptr<spdlog::logger>>& Loggers() { return _loggers; }
 
             SettingsObject& Settings() { return _settings; }
+
+            virtual idatabase_manager * DatabaseManager() = 0;
 
 
             void LogMessage(const std::string& msg, spdlog::level::level_enum level = spdlog::level::info) {
@@ -51,7 +52,6 @@ namespace acl { namespace logos { namespace core {
             }
 
         private:
-            std::shared_ptr<soci::session> _sql_session = nullptr;
             std::chrono::system_clock::time_point _start_time;
             std::vector<std::shared_ptr<spdlog::logger>> _loggers;
             SettingsObject  _settings;

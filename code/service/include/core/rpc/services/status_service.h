@@ -7,25 +7,23 @@
 #include "core/interfaces/blockchain_node.h"
 #include "core/rpc/generated/status.grpc.pb.h"
 
-using grpc::ServerContext;
-using google::protobuf::Empty;
 
 namespace acl { namespace logos { namespace core { namespace rpc {
 
     class StatusService final:
         public acl::logos::core::iblockchain_node_service<LogosSvcSettings>,
-        public acl::rpc::Status::Service
+        public acl::rpc::v1::Status::Service
     {
     public:
         explicit StatusService(iblockchain_node<LogosSvcSettings> * nodePtr):
-            acl::rpc::Status::Service(),
+            acl::rpc::v1::Status::Service(),
             iblockchain_node_service(nodePtr, this)
         {
 
         }
         ~StatusService() override {}
 
-        grpc::Status Up(ServerContext * context, const Empty * request, acl::rpc::StatusInfo * response) override;
+        grpc::Status Up(grpc::ServerContext * context, const google::protobuf::Empty * request, acl::rpc::v1::StatusInfo * response) override;
 
     private:
     };

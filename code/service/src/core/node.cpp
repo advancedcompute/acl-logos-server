@@ -7,6 +7,7 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
 
+#include "core/rpc/services/identity_service.h"
 #include "core/rpc/services/status_service.h"
 
 #include "file.h"
@@ -92,7 +93,7 @@ namespace acl { namespace logos { namespace core {
             _serverInstance->Shutdown();
         }
 
-        SQLSession().reset();
+        _db_manager.SQLSession().reset();
         Loggers().clear();
     }
 
@@ -140,6 +141,10 @@ namespace acl { namespace logos { namespace core {
         auto statusService = std::shared_ptr<acl::logos::core::rpc::StatusService>(new acl::logos::core::rpc::StatusService(this));
         _nodeServiceVect.push_back(statusService);
         _nodeServiceMap["status"] = statusService;
+
+        auto identityService = std::shared_ptr<acl::logos::core::rpc::IdentityService>(new acl::logos::core::rpc::IdentityService(this));
+        _nodeServiceVect.push_back(identityService);
+        _nodeServiceMap["identity"] = identityService;
 
         return true;
     }
@@ -215,7 +220,7 @@ namespace acl { namespace logos { namespace core {
 
         if(settings.database_settings.engine == "mysql") {
             try {
-                SQLSession() = std::make_shared<soci::session>(
+                _db_manager.SQLSession() = std::make_shared<soci::session>(
                     soci::session(soci::mysql, ss.str())
                 );
                 success = true;
@@ -225,7 +230,7 @@ namespace acl { namespace logos { namespace core {
 
         } else if(settings.database_settings.engine == "postgresql") {
             try {
-                SQLSession() = std::make_shared<soci::session>(
+                _db_manager.SQLSession() = std::make_shared<soci::session>(
                     soci::session(soci::postgresql, ss.str())
                 );
                 success = true;
@@ -234,7 +239,7 @@ namespace acl { namespace logos { namespace core {
             }
         }  else if(settings.database_settings.engine == "sqlite3") {
             try {
-                SQLSession() = std::make_shared<soci::session>(
+                _db_manager.SQLSession() = std::make_shared<soci::session>(
                     soci::session(soci::sqlite3, ss.str())
                 );
                 success = true;
@@ -247,6 +252,12 @@ namespace acl { namespace logos { namespace core {
             // Connected to database, now need to check schema, make tables etc.
             // 2. Resolve schema - create tables if need be
             LogMessage("Successfully connected to database, now checking schema");
+            
+            _db_manager.IdentityTable().Create(*_db_manager.SQLSession());
+            _db_manager.TransferSignatureTable().Create(*_db_manager.SQLSession());
+            _db_manager.TransferTable().Create(*_db_manager.SQLSession());
+            _db_manager.WalletTable().Create(*_db_manager.SQLSession());
+            _db_manager.WalletKeyTable().Create(*_db_manager.SQLSession());
             
         } else {
             LogMessage(cpp::utils::stringFormat("Unable to connect to database host: %s",

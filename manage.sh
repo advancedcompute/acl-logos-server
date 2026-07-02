@@ -29,16 +29,13 @@ function cleanBuildDirs() {
 
 
 function generatePython() {
-    # Make the output directory
-    if [ ! -d "$2" ]; then
-        mkdir "$2"
-    fi;
+    mkdir -p "$2"
 
     python3 -m grpc_tools.protoc \
-        -I "$1" \
+        -I"$1" \
         --python_out="$2" \
         --grpc_python_out="$2" \
-        "$1"/*.proto
+        $(find "$1" -name "*.proto")
 }
 
 function generateCpp() {
@@ -92,25 +89,24 @@ if [ "$1" = "generate-demo-certs" ]; then
     fi;
 
 elif [ "$1" = "generate-py" ]; then
-    if [ ! -d "$script_dir/.grpc_generated/py" ]; then
-        mkdir -p "$script_dir/.grpc_generated/py"
+    generatePython $script_dir/dep/acl-blockchain-proto/protobuf \
+        $script_dir/.grpc_generated/py
+    
+    if [ ! -d "$script_dir/.grpc_generated/acl/rpc/v1" ]; then
+        mkdir -p "$script_dir/.grpc_generated/acl/rpc/v1"
     fi;
-    generatePython $script_dir/dep/acl-blockchain-proto/protobuf $script_dir/.grpc_generated/py
-
-    if [ ! -d "$script_dir/.grpc_generated/acl/rpc" ]; then
-        mkdir -p "$script_dir/.grpc_generated/acl/rpc"
-    fi;
-    cp -r $script_dir/.grpc_generated/py/* $script_dir/.grpc_generated/acl/rpc
+    cp -r $script_dir/.grpc_generated/py/* $script_dir/.grpc_generated/acl/rpc/v1
 
     # Work around fix to prefix the imports
-    find "$script_dir/.grpc_generated/acl/rpc" -name '*.py' -exec \
+    find "$script_dir/.grpc_generated/acl/rpc/v1" -name '*.py' -exec \
         sed -Ei 's/^import ([a-zA-Z0-9_]+_pb2)( as )?/from . import \1\2/' {} \;
-    find "$script_dir/.grpc_generated/acl/rpc" -name '*.py' -exec \
+    find "$script_dir/.grpc_generated/acl/rpc/v1" -name '*.py' -exec \
         sed -Ei 's/^import ([a-zA-Z0-9_]+_pb2_grpc)( as )?/from . import \1\2/' {} \;
     
     # Add __init__.py files
     touch $script_dir/.grpc_generated/acl/__init__.py
     touch $script_dir/.grpc_generated/acl/rpc/__init__.py
+    touch $script_dir/.grpc_generated/acl/rpc/v1/__init__.py
 elif [ "$1" = "generate-cpp" ]; then
     if [ ! -d "$script_dir/.grpc_generated/cpp" ]; then
         mkdir "$script_dir/.grpc_generated/cpp"
@@ -118,6 +114,9 @@ elif [ "$1" = "generate-cpp" ]; then
     generateCpp $script_dir/dep/acl-blockchain-proto/protobuf $script_dir/.grpc_generated/cpp
     cp $script_dir/.grpc_generated/cpp/*.h $script_dir/code/service/include/core/rpc/generated
     cp $script_dir/.grpc_generated/cpp/*.cc $script_dir/code/service/src/core/rpc/generated
+elif [ "$1" == "clean" ]; then
+    cleanGeneratedCode
+    cleanBuildDirs
 elif [ "$1" == "clean-build" ]; then
     cleanBuildDirs
 elif [ "$1" == "clean-code" ]; then

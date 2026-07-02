@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/config/cmd_arg_options.h"
+#include "core/db/database_manager.h"
 #include "core/interfaces/blockchain_node.h"
 
 #include <grpc++/server.h>
@@ -44,6 +45,8 @@ namespace acl { namespace logos { namespace core {
 
             std::shared_ptr<grpc::Server>& GRPCServer() { return _serverInstance; }
 
+            db::DatabaseManager * DatabaseManager() override { return &_db_manager; }
+
 
         private:
             bool initializeGRPCServer(const LogosSvcSettings& settings);
@@ -73,6 +76,7 @@ namespace acl { namespace logos { namespace core {
             std::shared_ptr<grpc::ServerCredentials> _credentials;
             std::thread _grpcServerThread;
             
+            db::DatabaseManager _db_manager;
             bool _initialized = false;
 
     };
