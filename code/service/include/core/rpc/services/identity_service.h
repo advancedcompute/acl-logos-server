@@ -26,6 +26,9 @@ namespace acl { namespace logos { namespace core { namespace rpc {
         grpc::Status RegisterIdentity(grpc::ServerContext * context, const acl::rpc::v1::RegisterIdentityRequest * request, acl::rpc::v1::RegisterIdentityResponse * response) override;
 
     private:
+
+        bool validate(const acl::rpc::v1::RegisterIdentityRequest * request);
+
     };
 
 } } } }

@@ -1,8 +1,8 @@
 import grpc
 from google.protobuf.empty_pb2 import Empty
 
-from acl.rpc import status_pb2
-from acl.rpc import status_pb2_grpc
+from acl.rpc.v1 import status_pb2
+from acl.rpc.v1 import status_pb2_grpc
 
 with open("/home/dominic/.config/acl/logos/node/tls/cert.pem", "rb") as f:
     root_cert = f.read()
