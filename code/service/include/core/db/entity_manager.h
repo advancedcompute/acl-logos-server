@@ -23,29 +23,35 @@ namespace acl { namespace logos { namespace core { namespace db {
         }
 
         /// Creates the backing table if it does not already exist.
-        void CreateTable()
+        bool CreateTable()
         {
+            bool success = false;
             soci::transaction tx(m_sql);
             try {
                 m_sql << TableTraits<SQLModel>::CreateTable();
                 tx.commit();
+                success = true;
             } catch(soci::soci_error& ex) {
                 _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
                 tx.rollback();
             }
+            return success;
         }
 
         /// Inserts a single entity.
-        void Insert(const SQLModel& item)
+        bool Insert(const SQLModel& item)
         {
+            bool success = false;
             soci::transaction tx(m_sql);
             try {
                 TableTraits<SQLModel>::Insert(m_sql, item);
                 tx.commit();
+                success = true;
             } catch(soci::soci_error& ex) {
                 _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
                 tx.rollback();
             }
+            return success;
         }
 
         /// Inserts a collection of entities.
@@ -74,11 +80,13 @@ namespace acl { namespace logos { namespace core { namespace db {
         /// Retrieves every entity in the table.
         std::vector<SQLModel> RetrieveAll()
         {
+            std::vector<SQLModel> retSet;
             try {
                 return TableTraits<SQLModel>::RetrieveAll(m_sql);
             } catch(soci::soci_error& ex) {
                 _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
             }
+            return retSet;
         }
 
         /// Updates an entity.

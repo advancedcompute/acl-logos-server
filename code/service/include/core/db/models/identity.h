@@ -175,12 +175,13 @@ namespace acl { namespace logos { namespace core { namespace db {
 
             for (const auto& row : rs)
             {
+                //int verified=0, active=0;
                 Identity identity;
                 identity.identity_id = row.get<std::string>("identity_id");
                 identity.identity_type = static_cast<IdentityType>(row.get<int>("identity_type"));
                 identity.public_key = row.get<std::string>("public_key");
-                identity.verified = row.get<bool>("verified");
-                identity.active = row.get<bool>("active");
+                identity.verified = row.get<int>("verified");
+                identity.active = row.get<int>("active");
                 identity.created_at = row.get<uint64_t>("created_at");
 
                 identity.metadata = DeserializeMetadata(row.get<std::string>("metadata"));
@@ -189,35 +190,69 @@ namespace acl { namespace logos { namespace core { namespace db {
             return identities;
         }
 
-    private:
-
-        static std::string SerializeMetadata(const std::map<std::string, std::string>& metadata)
+        static Json::Value JsonMetadata(const std::map<std::string, std::string>& metadata)
         {
             Json::Value jsonObj;
-            for(auto& md : metadata)
-            {
+            for(auto& md : metadata) {
                 jsonObj[md.first] = md.second;
             }
-            return jsonObj.asString();
+            return jsonObj;
         }
 
-        static std::map<std::string, std::string> DeserializeMetadata(const std::string& metadata)
+        static Json::Value JsonMetadata(const std::string& metadata)
         {
-            std::map<std::string, std::string> retMap;
             Json::CharReaderBuilder rbuilder;
             Json::CharReader * reader = rbuilder.newCharReader();
             std::string parseErrors;        // Note: this var is thrown away
             Json::Value contents;
 
-            if(reader->parse(metadata.data(), metadata.data() + metadata.size(), &contents, &parseErrors))
+            if( !reader->parse(metadata.data(), metadata.data() + metadata.size(), &contents, &parseErrors) )
             {
-                for(auto& member : contents.getMemberNames())
-                {
-                    retMap[member] = contents[member].asString();
-                }
+                // TODO
+            }
+            return contents;
+        }
+        
+        static std::string SerializeMetadata(const std::map<std::string, std::string>& metadata)
+        {
+            Json::Value jsonObj = JsonMetadata(metadata);
+
+            std::stringstream ss;
+            try {
+                // Configure writer for pretty output
+                Json::StreamWriterBuilder writerBuilder;
+                writerBuilder["indentation"] = "  "; // 2 spaces for readability
+                std::unique_ptr<Json::StreamWriter> writer(writerBuilder.newStreamWriter());
+                writer->write(jsonObj, &ss);
+            } catch (const std::exception& e) {
+                // TODO: Handle this better
+            }
+            return ss.str();
+        }
+
+        static std::map<std::string, std::string> DeserializeMetadata(Json::Value& metadata)
+        {
+            std::map<std::string, std::string> retMap;
+            for(const std::string& member : metadata.getMemberNames())
+            {
+                retMap[member] = metadata[member].asString();
             }
             return retMap;
         }
+
+        static std::map<std::string, std::string> DeserializeMetadata(const std::string& metadata)
+        {
+            std::map<std::string, std::string> retMap;
+            Json::Value contents = JsonMetadata(metadata);
+
+            for(auto& member : contents.getMemberNames())
+            {
+                retMap[member] = contents[member].asString();
+            }
+            return retMap;
+        }
+
+
     };
 
 

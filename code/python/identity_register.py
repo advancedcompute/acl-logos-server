@@ -1,6 +1,5 @@
 
-import grpc
-
+import grpc, json
 from acl.rpc.v1 import identity_pb2
 from acl.rpc.v1 import identity_pb2_grpc
 
@@ -33,8 +32,7 @@ def register_identity(server_address: str, ca_cert_path: str):
         request = identity_pb2.RegisterIdentityRequest(
             type=id_request_type,
             public_key=ecc_pem,
-            #metadata=id_request_metadata,
-        )
+            metadata=id_request_metadata)
 
         try:
             response = stub.RegisterIdentity(request)
