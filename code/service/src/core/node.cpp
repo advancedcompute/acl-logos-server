@@ -252,13 +252,12 @@ namespace acl { namespace logos { namespace core {
             // Connected to database, now need to check schema, make tables etc.
             // 2. Resolve schema - create tables if need be
             LogMessage("Successfully connected to database, now checking schema");
-            
-            _db_manager.IdentityTable().Create(*_db_manager.SQLSession());
-            _db_manager.TransferSignatureTable().Create(*_db_manager.SQLSession());
-            _db_manager.TransferTable().Create(*_db_manager.SQLSession());
-            _db_manager.WalletTable().Create(*_db_manager.SQLSession());
-            _db_manager.WalletKeyTable().Create(*_db_manager.SQLSession());
-            
+            _db_manager.LoadEntityManagers(this);
+
+            _db_manager.Identities().CreateTable();
+            _db_manager.Wallets().CreateTable();
+            _db_manager.WalletKeys().CreateTable();
+            _db_manager.Transfers().CreateTable();
         } else {
             LogMessage(cpp::utils::stringFormat("Unable to connect to database host: %s",
                 settings.database_settings.host), spdlog::level::err);

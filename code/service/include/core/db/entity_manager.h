@@ -4,91 +4,147 @@
 #include <vector>
 #include <optional>
 
+#include "macros.h"
+#include "string_helpers.h"
+
+#include "core/interfaces/blockchain_node.h"
+
 namespace acl { namespace logos { namespace core { namespace db {
 
-template <typename T>
-class EntityManager
-{
-public:
-    explicit EntityManager(soci::session& sql)
-        : sql_(sql)
-    {}
-
-    // -------------------------
-    // CREATE
-    // -------------------------
-    template <typename InsertFn>
-    void create(const T& entity, InsertFn insertFn)
+    template<typename SettingsObject, typename SQLModel>
+    class EntityManager
     {
-        sql_ << insertFn(entity);
-    }
+    public:
 
-    // -------------------------
-    // READ (by ID)
-    // -------------------------
-    template <typename RowMapper>
-    std::optional<T> getById(const std::string& table,
-                             const std::string& idField,
-                             const std::string& idValue,
-                             RowMapper mapper)
-    {
-        soci::row row;
-
-        std::string query =
-            "SELECT * FROM " + table +
-            " WHERE " + idField + " = :id LIMIT 1";
-
-        auto result = sql_.once << query, soci::into(row), soci::use(idValue);
-
-        if (!sql_.got_data())
-            return std::nullopt;
-
-        return mapper(row);
-    }
-
-    // -------------------------
-    // UPDATE
-    // -------------------------
-    template <typename UpdateFn>
-    void update(const T& entity, UpdateFn updateFn)
-    {
-        sql_ << updateFn(entity);
-    }
-
-    // -------------------------
-    // DELETE
-    // -------------------------
-    void remove(const std::string& table,
-                const std::string& idField,
-                const std::string& idValue)
-    {
-        sql_ << "DELETE FROM " + table +
-                " WHERE " + idField + " = :id",
-                soci::use(idValue);
-    }
-
-    // -------------------------
-    // LIST ALL
-    // -------------------------
-    template <typename RowMapper>
-    std::vector<T> listAll(const std::string& table,
-                           RowMapper mapper)
-    {
-        soci::rowset<soci::row> rs =
-            (sql_.prepare << "SELECT * FROM " + table);
-
-        std::vector<T> results;
-
-        for (auto const& row : rs)
+        explicit EntityManager(iblockchain_node<SettingsObject> * bc_node, soci::session& sql)
+            : _bc_node(bc_node), m_sql(sql)
         {
-            results.push_back(mapper(row));
+            assert(bc_node != nullptr);
         }
 
-        return results;
-    }
+        /// Creates the backing table if it does not already exist.
+        bool CreateTable()
+        {
+            bool success = false;
+            soci::transaction tx(m_sql);
+            try {
+                m_sql << TableTraits<SQLModel>::CreateTable();
+                tx.commit();
+                success = true;
+            } catch(soci::soci_error& ex) {
+                _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
+                tx.rollback();
+            }
+            return success;
+        }
 
-private:
-    soci::session& sql_;
-};
+        /// Inserts a single entity.
+        bool Insert(const SQLModel& item)
+        {
+            bool success = false;
+            soci::transaction tx(m_sql);
+            try {
+                TableTraits<SQLModel>::Insert(m_sql, item);
+                tx.commit();
+                success = true;
+            } catch(soci::soci_error& ex) {
+                _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
+                tx.rollback();
+            }
+            return success;
+        }
 
+        /// Inserts a collection of entities.
+        void Insert(const std::vector<SQLModel>& items)
+        {
+            for (const auto& item : items)
+            {
+                try {
+                    TableTraits<SQLModel>::Insert(m_sql, item);
+                } catch(soci::soci_error& ex) {
+                    _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
+                }
+            }
+        }
+
+        /// Retrieves an entity by its primary key.
+        SQLModel Retrieve(const std::string& id)
+        {
+            try {
+                return TableTraits<SQLModel>::Retrieve(m_sql, id);
+            } catch(soci::soci_error& ex) {
+                _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
+            }
+        }
+
+        /// Retrieves every entity in the table.
+        std::vector<SQLModel> RetrieveAll()
+        {
+            std::vector<SQLModel> retSet;
+            try {
+                return TableTraits<SQLModel>::RetrieveAll(m_sql);
+            } catch(soci::soci_error& ex) {
+                _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
+            }
+            return retSet;
+        }
+
+        /// Updates an entity.
+        void Update(const SQLModel& item)
+        {
+            soci::transaction tx(m_sql);
+            try {
+                TableTraits<SQLModel>::Update(m_sql, item);
+                tx.commit();
+            } catch(soci::soci_error& ex) {
+                _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
+                tx.rollback();
+            }
+        }
+
+        /// Updates a collection of entities.
+        void Update(const std::vector<SQLModel>& items)
+        {
+            for (const auto& item : items)
+            {
+                try {
+                    TableTraits<SQLModel>::Update(m_sql, item);
+                } catch(soci::soci_error& ex) {
+                    _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
+                }
+            }
+        }
+
+        /// Deletes an entity.
+        void Delete(const SQLModel& item)
+        {
+            soci::transaction tx(m_sql);
+            try {
+                TableTraits<SQLModel>::Delete(m_sql, item);
+                tx.commit();
+            } catch(soci::soci_error& ex) {
+                _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
+                tx.rollback();
+            }
+        }
+
+        /// Deletes a collection of entities.
+        void Delete(const std::vector<SQLModel>& items)
+        {
+            for (const auto& item : items)
+            {
+                try {
+                    TableTraits<SQLModel>::Delete(m_sql, item);
+                } catch(soci::soci_error& ex) {
+                    _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
+                }
+            }
+        }
+
+
+    private:
+
+        soci::session& m_sql;
+        iblockchain_node<SettingsObject> * _bc_node = nullptr;
+    };
 } } } }

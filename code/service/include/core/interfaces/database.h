@@ -5,20 +5,6 @@
 
 namespace acl { namespace logos { namespace core {
 
-    template <typename T>
-    class ischema_manager
-    {
-        public:
-            static void Create(soci::session& sql)
-            {
-                sql << db::TableTraits<T>::CreateTable();
-            }
-
-        private:
-
-    };
-
-
     class idatabase_manager
     {
         public:
