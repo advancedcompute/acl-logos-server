@@ -6,10 +6,10 @@ from acl.rpc.v1 import identity_pb2_grpc
 ecc_keypath = '/home/dominic/Documents/work/acl-logos-server/etc/demo_ecc_public_key.pem'
 grpc_certpath = "/home/dominic/.config/acl/logos/node/tls/cert.pem"
 
-id_request_type = identity_pb2.PERSON
+id_request_type = identity_pb2.COMPANY
 id_request_metadata = {
-    "first_name": "Dominic",
-    "last_name": "Finch",
+    "first_name": "Advanced Computation Laboratory",
+    "last_name": "Org",
     "email": "administrator@advancedcomputation.org.uk",
 }
 

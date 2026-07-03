@@ -168,8 +168,7 @@ namespace acl { namespace logos { namespace core { namespace db {
 
         static std::vector<Identity> RetrieveAll(soci::session& sql)
         {
-            soci::rowset<soci::row> rs =
-                (sql.prepare << "SELECT * FROM identities");
+            soci::rowset<soci::row> rs = (sql.prepare << "SELECT * FROM identities");
 
             std::vector<Identity> identities;
 
