@@ -1,6 +1,6 @@
 #include "core/config/cmd_arg_serializer.h"
-
-#include <iostream>
+#include "string_helpers.h"
+#include <cstdlib>
 
 namespace acl { namespace logos { namespace core {
 
@@ -45,8 +45,10 @@ namespace acl { namespace logos { namespace core {
         // Database settings
         auto database_json = settings_json["database"];
         settings_obj.database_settings.engine = database_json["engine"].asString();
+
         auto engine_json = database_json[settings_obj.database_settings.engine];
         settings_obj.database_settings.host = engine_json["host"].asString();
+        settings_obj.database_settings.unix_socket = engine_json["unix_socket"].asString();
         settings_obj.database_settings.port = engine_json["port"].asInt();
         settings_obj.database_settings.database = engine_json["db"].asString();
         settings_obj.database_settings.username = engine_json["user"].asString();
@@ -59,15 +61,20 @@ namespace acl { namespace logos { namespace core {
         // grpc settings
         auto grpc_json = settings_json["grpc"];
         auto grpc_tls_json = grpc_json["tls"];
+        int tc = grpc_json["max_thread_count"].asInt();
         settings_obj.grpc_settings.address = grpc_json["address"].asString();
         settings_obj.grpc_settings.port = grpc_json["port"].asInt();
         settings_obj.grpc_settings.max_thread_count = grpc_json["max_thread_count"].asInt();
+
+        settings_obj.grpc_settings.max_thread_count = (tc <= 0 ? 10 : tc);
         settings_obj.grpc_settings.max_message_size_mb = grpc_json["max_message_size_mb"].asInt();
         settings_obj.grpc_settings.keep_alive_time_ms = grpc_json["keep_alive_time_ms"].asInt();
         settings_obj.grpc_settings.keep_alive_timeout_ms = grpc_json["keep_alive_timeout_ms"].asInt();
         settings_obj.grpc_settings.tls.use_tls = grpc_tls_json["enabled"].asBool();
+        settings_obj.grpc_settings.tls.client_auth = grpc_tls_json["force_client_auth"].asBool();
         settings_obj.grpc_settings.tls.cert_path = grpc_tls_json["cert_path"].asString();
         settings_obj.grpc_settings.tls.key_path = grpc_tls_json["key_path"].asString();
+        settings_obj.grpc_settings.tls.ca_path = grpc_tls_json["ca_path"].asString();
 
         
 

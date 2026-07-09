@@ -94,7 +94,6 @@ namespace acl { namespace logos { namespace core { namespace rpc {
             auto jsonMetadata = db::TableTraits<db::Identity>::JsonMetadata(identity.metadata);
             for(const std::string& member : jsonMetadata.getMemberNames())
             {
-                printf("member: %s\n", member.c_str());
                 (*responseId->mutable_metadata())[member] = jsonMetadata[member].asString();
             }
             responseId->mutable_created_ts()->set_seconds(identity.created_at);
@@ -164,8 +163,17 @@ namespace acl { namespace logos { namespace core { namespace rpc {
 
             BCService()->LogMessage(cpp::utils::stringFormat("Service request: %s::%s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__));
 
+            auto page_size = request->page_size();
+            auto page_token = request->page_token();
+
+            if(page_size <= 0) {
+                // error
+            }
+
             db::DatabaseManager* dbManager = (db::DatabaseManager*)(BCService()->DatabaseManager());
             auto storedIdentities = dbManager->Identities().RetrieveAll();
+
+
             prepare_identities_list_response(storedIdentities, response);
         } catch(std::exception& ex)
         {

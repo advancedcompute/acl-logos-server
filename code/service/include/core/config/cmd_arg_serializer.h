@@ -12,8 +12,6 @@ namespace acl { namespace logos { namespace core {
     public:
         bool convert(const LogosSvcSettings& u, Json::Value& v) override;
         bool convert(const Json::Value& v, LogosSvcSettings& u) override;
-
-
     };
 
 }}}

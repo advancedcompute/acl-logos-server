@@ -103,17 +103,26 @@ namespace acl { namespace logos { namespace core {
         auto initTLS = false;
         if(settings.grpc_settings.tls.use_tls)
         {
-            std::string certPem, keyPem;
-            if(cpp::utils::read_file_contents(settings.grpc_settings.tls.cert_path, certPem) &&
+            std::string certPem, keyPem, caPem;
+            if(cpp::utils::read_file_contents(settings.grpc_settings.tls.ca_path, caPem) &&
+                cpp::utils::read_file_contents(settings.grpc_settings.tls.cert_path, certPem) &&
                 cpp::utils::read_file_contents(settings.grpc_settings.tls.key_path, keyPem))
             {
-                //grpc::SslServerCredentialsOptions sslCertOptions(GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY);
-                grpc::SslServerCredentialsOptions sslCertOptions(GRPC_SSL_REQUEST_CLIENT_CERTIFICATE_BUT_DONT_VERIFY);
+                grpc::SslServerCredentialsOptions sslCertOptions;
+
+                if(settings.grpc_settings.tls.client_auth) {
+                    sslCertOptions.client_certificate_request = GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY;
+                    sslCertOptions.force_client_auth = true;
+                } else {
+                    sslCertOptions.client_certificate_request = GRPC_SSL_REQUEST_CLIENT_CERTIFICATE_BUT_DONT_VERIFY;
+                    sslCertOptions.force_client_auth = false;
+                }
+                
                 grpc::SslServerCredentialsOptions::PemKeyCertPair keyCertPair = {
                     keyPem, certPem
                 };
 
-                sslCertOptions.force_client_auth = false;
+                sslCertOptions.pem_root_certs = caPem;
                 sslCertOptions.pem_key_cert_pairs.push_back(keyCertPair);
                 _credentials = grpc::SslServerCredentials(sslCertOptions);
 
@@ -207,6 +216,11 @@ namespace acl { namespace logos { namespace core {
         ss << "db=" << settings.database_settings.database << " ";
         ss << "user=" << settings.database_settings.username << " ";
         ss << "password='" << settings.database_settings.password << "' ";
+
+        if(!settings.database_settings.unix_socket.empty())
+        {
+            ss << "unix_socket=" << settings.database_settings.unix_socket << " ";
+        }
 
         if(settings.database_settings.certificate.use_tls)
         {

@@ -24,7 +24,8 @@ namespace acl { namespace logos { namespace core {
 
     struct Certificate
     {
-        bool use_tls;
+        bool use_tls = false;
+        bool client_auth = false;
         std::string cert_path;
         std::string key_path;
         std::string ca_path;
@@ -85,6 +86,7 @@ namespace acl { namespace logos { namespace core {
         public:
             std::string engine;
             std::string host;
+            std::string unix_socket;
             std::string database;
             std::string username;
             std::string password;

@@ -14,8 +14,10 @@ def list_identities(
     page_token: str = "",
 ):
     # Load CA cert
-    with open(ca_cert_path, "rb") as f:
-        trusted_certs = f.read()
+    trusted_certs = None
+    if ca_cert_path is not None:
+        with open(ca_cert_path, "rb") as f:
+            trusted_certs = f.read()
 
     # Optional mTLS
     if client_cert_path and client_key_path:
@@ -31,9 +33,12 @@ def list_identities(
             certificate_chain=client_cert,
         )
     else:
-        credentials = grpc.ssl_channel_credentials(
-            root_certificates=trusted_certs
-        )
+        if trusted_certs is not None:
+            credentials = grpc.ssl_channel_credentials(
+                root_certificates=trusted_certs
+            )
+        else:
+            credentials = grpc.ssl_channel_credentials()
 
     with grpc.secure_channel(server_address, credentials) as channel:
         stub = identity_pb2_grpc.IdentityServiceStub(channel)
@@ -73,8 +78,15 @@ def list_identities(
 
 
 if __name__ == "__main__":
+    # Local dev
+    #list_identities(
+    #    server_address="localhost:50051",
+    #    ca_cert_path=grpc_certpath,
+    #    page_size=20,
+    #)
+
+    # Cloud-hosted
     list_identities(
-        server_address="localhost:50051",
-        ca_cert_path=grpc_certpath,
-        page_size=20,
+        server_address="acl-logos-1027055074837.europe-west2.run.app:443",
+        ca_cert_path=None
     )

@@ -71,21 +71,41 @@ function usage() {
 
 
 if [ "$1" = "generate-demo-certs" ]; then
-    openssl ecparam -name prime256v1 -genkey -noout -out ./etc/demo_ecc_private_key.pem
+    mkdir -p $script_dir/etc/tls
+
+    openssl genrsa -out $script_dir/etc/tls/server-ca.key 4096
     openssl req \
-        -new -key ./etc/demo_ecc_private_key.pem \
-        -out ./etc/demo_ecc_csr.pem \
-        -subj "/C=GB/ST=Cambridgeshire/L=Cambridge/O=ACL/CN=localhost/emailAddress=administrator@advancedcomputation.org.uk"
-    openssl req -x509 -key ./etc/demo_ecc_private_key.pem \
-        -days 365 -out ./etc/demo_ecc_certificate.pem   \
-        -subj "/C=GB/ST=Cambridgeshire/L=Cambridge/O=ACL/CN=localhost/emailAddress=administrator@advancedcomputation.org.uk"
-    openssl pkey -in ./etc/demo_ecc_private_key.pem -pubout -outform pem > ./etc/demo_ecc_public_key.pem
+        -x509 \
+        -new \
+        -nodes \
+        -key $script_dir/etc/tls/server-ca.key \
+        -sha256 \
+        -days 3650 \
+        -out $script_dir/etc/tls/server-ca.crt \
+        -subj "/CN=ACL Testing CA"
+    openssl genrsa -out $script_dir/etc/tls/server.key 4096
+    openssl req \
+        -new \
+        -key $script_dir/etc/tls/server.key \
+        -out $script_dir/etc/tls/server.csr \
+        -subj "/CN=localhost"
+    openssl x509 \
+        -req \
+        -in $script_dir/etc/tls/server.csr \
+        -CA $script_dir/etc/tls/server-ca.crt \
+        -CAkey $script_dir/etc/tls/server-ca.key \
+        -CAcreateserial \
+        -out $script_dir/etc/tls/server.crt \
+        -days 365 \
+        -sha256 \
+        -extfile $script_dir/etc/local.server.ext
+
 
     if [ "$2" = 1 ]; then
         mkdir -p ~/.config/acl/logos/node/tls/
-        cp ./etc/demo_ecc_certificate.pem ~/.config/acl/logos/node/tls/cert.pem
-        cp ./etc/demo_ecc_private_key.pem ~/.config/acl/logos/node/tls/key.pem
-        cp ./etc/demo_ecc_public_key.pem ~/.config/acl/logos/node/tls/ca.pem
+        cp $script_dir/etc/tls/server.crt ~/.config/acl/logos/node/tls/grpc.cert.pem
+        cp $script_dir/etc/tls/server.key ~/.config/acl/logos/node/tls/grpc.key.pem
+        cp $script_dir/etc/tls/server-ca.crt ~/.config/acl/logos/node/tls/grpc.ca.pem
     fi;
 
 elif [ "$1" = "generate-py" ]; then

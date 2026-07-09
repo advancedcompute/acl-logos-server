@@ -4,7 +4,8 @@ build/
 .env
 .env.yaml
 etc/*.settings.json
-etc/demo_*.pem
+etc/tls/
+
 code/service/include/core/constants.h
 
 __pycache__/
