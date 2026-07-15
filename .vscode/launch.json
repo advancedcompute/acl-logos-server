@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/build/code/service/logos-service",
             "args": [
                 "-c",
-                "${workspaceFolder}/build/code/service/dev.settings.json"
+                "${workspaceFolder}/build/code/service/docker.settings.json"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",

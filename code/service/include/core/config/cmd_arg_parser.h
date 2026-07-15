@@ -102,7 +102,7 @@ namespace acl { namespace logos { namespace core {
                     {
                         if(_serializer.convert(configSettings, _settings))
                         {
-                            // Placeholder resolution
+                            // Env var placeholder resolution
                             SettingsPlaceholder ph;
                             ph.resolve_placeholders(_settings, _settings);
 

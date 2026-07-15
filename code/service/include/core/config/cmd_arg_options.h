@@ -25,7 +25,11 @@ namespace acl { namespace logos { namespace core {
     struct Certificate
     {
         bool use_tls = false;
+        std::string _use_tls;
+
         bool client_auth = false;
+        std::string _client_auth;
+        
         std::string cert_path;
         std::string key_path;
         std::string ca_path;
@@ -43,10 +47,8 @@ namespace acl { namespace logos { namespace core {
         public:
             std::string node_id;
             std::string operator_id;
+            std::string network_id;
             KeyPair     keypair;
-            Certificate certificate;
-
-
     };
 
     struct LoggerConfig
@@ -73,9 +75,16 @@ namespace acl { namespace logos { namespace core {
     {
         public:
             std::string address;
+            
             int port;
+            std::string _port;
+
             int max_thread_count = 10;
-            int max_message_size_mb;
+            std::string _max_thread_count;      // Used for resolving env vars
+
+            int max_message_size_mb = 64;
+            std::string _max_message_size_mb;   // Used for resolving env vars
+
             int keep_alive_time_ms;
             int keep_alive_timeout_ms;
             Certificate tls;
@@ -90,7 +99,10 @@ namespace acl { namespace logos { namespace core {
             std::string database;
             std::string username;
             std::string password;
-            int port;
+            
+            int port = 0;
+            std::string _port;      // Used for resolving env vars
+
             Certificate certificate;
     };
 

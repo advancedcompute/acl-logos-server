@@ -137,10 +137,21 @@ namespace acl { namespace logos { namespace core {
             ++errorCount;
         }
 
-        if(config.database_settings.port <= 0)
-        {
-            getCallback()("database.port", std::to_string(config.database_settings.port), "Database port must be a positive integer");
-            ++errorCount;
+        if(config.database_settings._port.empty()) {
+            if(config.database_settings.port <= 0)
+            {
+                getCallback()("database.port", std::to_string(config.database_settings.port), "Database port must be a positive integer");
+                ++errorCount;
+            }
+        } else {
+            auto resolvedDbPort = atoi(config.database_settings._port.c_str());
+            if(resolvedDbPort <= 0)
+            {
+                getCallback()("database.port", std::to_string(config.database_settings.port), "Database port must be a positive integer");
+                ++errorCount;
+            } else {
+                config.database_settings.port = resolvedDbPort;
+            }
         }
 
         if(config.database_settings.certificate.use_tls)
@@ -202,6 +213,12 @@ namespace acl { namespace logos { namespace core {
             ++errorCount;
         }
 
+        if(config.identity_settings.network_id.empty())
+        {
+            getCallback()("identity.network_id", "<empty>", "Identity network ID must be set");
+            ++errorCount;
+        }
+
         if(!config.identity_settings.keypair.type.empty())
         {
             auto kp_type_it = std::find(permittedKeyTypes.begin(), permittedKeyTypes.end(), config.identity_settings.keypair.type);
@@ -224,14 +241,16 @@ namespace acl { namespace logos { namespace core {
                 errorCount += validateECCIdentityKey(config, identity_ecc_key);
             } else if(config.identity_settings.keypair.type == "ed25519") {
                 errorCount += validateEDIdentityKey(config, identity_ed_key);
-            } else if(config.identity_settings.keypair.type == "rsa") {
-                errorCount += validateRSAIdentityKey(config, identity_rsa_key);
             }
+            // else if(config.identity_settings.keypair.type == "rsa") {
+            //    errorCount += validateRSAIdentityKey(config, identity_rsa_key);
+            //}
         } else {
             getCallback()("identity.keypair.public_key_path", "<empty>", "Identity keypair must be set");
             ++errorCount;
         }
         
+        /*
         if(config.identity_settings.certificate.use_tls)
         {
             if(config.identity_settings.certificate.ca_path.empty())
@@ -270,7 +289,8 @@ namespace acl { namespace logos { namespace core {
                 }
             }
         }
-
+        */
+        
         return errorCount;
     }
 
@@ -305,7 +325,6 @@ namespace acl { namespace logos { namespace core {
                 cpp::utils::Certificate cert;
                 if(!cert.load_pem_file(config.grpc_settings.tls.cert_path)) {
                     // TODO: Build certificate and save to disk
-
                     //getCallback()("grpc.certificate.cert_path", "<Loading from disk>", "Failed to load certificate cert file from disk");
                     //++errorCount;
                 }
@@ -319,7 +338,6 @@ namespace acl { namespace logos { namespace core {
                 cpp::utils::Certificate cert;
                 if(!cert.load_pem_file(config.grpc_settings.tls.ca_path)) {
                     // TODO: Build certificate and save to disk
-
                     //getCallback()("grpc.certificate.ca_path", "<Loading from disk>", "Failed to load CA file from disk");
                     //++errorCount;
                 }

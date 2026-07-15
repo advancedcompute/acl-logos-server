@@ -9,7 +9,7 @@ namespace acl { namespace logos { namespace core {
         void resolve_placeholders(const LogosSvcSettings& input, LogosSvcSettings& output);
     
     private:
-        std::string ResolveEnvironmentVariables(const std::string& input);
+        bool ResolveEnvironmentVariables(const std::string& input, std::string& output);
     };
 
 } } }
