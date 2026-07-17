@@ -104,7 +104,14 @@ namespace acl { namespace logos { namespace core {
                         {
                             // Env var placeholder resolution
                             SettingsPlaceholder ph;
-                            ph.resolve_placeholders(_settings, _settings);
+                            try {
+                                ph.resolve_placeholders(_settings, _settings);
+                            } catch(std::runtime_error& ex)
+                            {
+                                printf("Error resolving environment variable placeholder: %s\n", ex.what());
+                                ++errorCount;
+                                return errorCount;  // Automatic validation failure. No point continuing
+                            }
 
                             // Validation
                             SettingsValidator validator([](const std::string& paramName, const std::string& paramValue, const std::string& errorMsg) {

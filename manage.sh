@@ -109,29 +109,30 @@ if [ "$1" = "generate-demo-certs" ]; then
     fi;
 
 elif [ "$1" = "generate-py" ]; then
-    generatePython $script_dir/dep/acl-blockchain-proto/protobuf \
+    generatePython $script_dir/dep/acl-e2ee-proto/protobuf \
         $script_dir/.grpc_generated/py
     
-    if [ ! -d "$script_dir/.grpc_generated/acl/rpc/v1" ]; then
-        mkdir -p "$script_dir/.grpc_generated/acl/rpc/v1"
+    if [ ! -d "$script_dir/.grpc_generated/acl/rpc/e2ee/v1" ]; then
+        mkdir -p "$script_dir/.grpc_generated/acl/rpc/e2ee/v1"
     fi;
-    cp -r $script_dir/.grpc_generated/py/* $script_dir/.grpc_generated/acl/rpc/v1
+    cp -r $script_dir/.grpc_generated/py/* $script_dir/.grpc_generated/acl/rpc/e2ee/v1
 
     # Work around fix to prefix the imports
-    find "$script_dir/.grpc_generated/acl/rpc/v1" -name '*.py' -exec \
+    find "$script_dir/.grpc_generated/acl/rpc/e2ee/v1" -name '*.py' -exec \
         sed -Ei 's/^import ([a-zA-Z0-9_]+_pb2)( as )?/from . import \1\2/' {} \;
-    find "$script_dir/.grpc_generated/acl/rpc/v1" -name '*.py' -exec \
+    find "$script_dir/.grpc_generated/acl/rpc/e2ee/v1" -name '*.py' -exec \
         sed -Ei 's/^import ([a-zA-Z0-9_]+_pb2_grpc)( as )?/from . import \1\2/' {} \;
     
     # Add __init__.py files
     touch $script_dir/.grpc_generated/acl/__init__.py
     touch $script_dir/.grpc_generated/acl/rpc/__init__.py
-    touch $script_dir/.grpc_generated/acl/rpc/v1/__init__.py
+    touch $script_dir/.grpc_generated/acl/rpc/e2ee/__init__.py
+    touch $script_dir/.grpc_generated/acl/rpc/e2ee/v1/__init__.py
 elif [ "$1" = "generate-cpp" ]; then
     if [ ! -d "$script_dir/.grpc_generated/cpp" ]; then
         mkdir "$script_dir/.grpc_generated/cpp"
     fi;
-    generateCpp $script_dir/dep/acl-blockchain-proto/protobuf $script_dir/.grpc_generated/cpp
+    generateCpp $script_dir/dep/acl-e2ee-proto/protobuf $script_dir/.grpc_generated/cpp
     cp $script_dir/.grpc_generated/cpp/*.h $script_dir/code/service/include/core/rpc/generated
     cp $script_dir/.grpc_generated/cpp/*.cc $script_dir/code/service/src/core/rpc/generated
 elif [ "$1" == "clean" ]; then

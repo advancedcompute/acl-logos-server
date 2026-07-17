@@ -2,6 +2,7 @@
 build/
 *credentials.json
 .env
+.env.docker
 .env.yaml
 etc/*.settings.json
 etc/tls/

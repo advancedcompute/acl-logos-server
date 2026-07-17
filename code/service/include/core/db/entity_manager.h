@@ -68,12 +68,13 @@ namespace acl { namespace logos { namespace core { namespace db {
         }
 
         /// Retrieves an entity by its primary key.
-        SQLModel Retrieve(const std::string& id)
+        SQLModel Retrieve(uint64_t id)
         {
             try {
                 return TableTraits<SQLModel>::Retrieve(m_sql, id);
             } catch(soci::soci_error& ex) {
                 _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
+                throw std::runtime_error(ex.what());
             }
         }
 

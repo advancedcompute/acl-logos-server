@@ -1,8 +1,4 @@
 import grpc
-from google.protobuf.empty_pb2 import Empty
-
-from acl.rpc.v1 import status_pb2
-from acl.rpc.v1 import status_pb2_grpc
 
 with open("/home/dominic/.config/acl/logos/node/tls/grpc.cert.pem", "rb") as f:
     root_cert = f.read()
@@ -16,6 +12,7 @@ channel = grpc.secure_channel("localhost:50051", creds)            # Local dev
 #    "logos.advancedcomputation.org.uk",
 #    grpc.ssl_channel_credentials()
 #)
+
 stub = status_pb2_grpc.StatusStub(channel)
 
 try:

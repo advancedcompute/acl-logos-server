@@ -97,17 +97,8 @@ RUN --mount=type=secret,id=mysql_ca \
     cp /run/secrets/mysql_key /etc/logos/certs/client.key && \
     chmod 600 /etc/logos/certs/*
 
-# Runtime environment variables (optional declarations only)
-ENV DATABASE_HOST=""
-ENV DATABASE_PORT=""
-ENV DATABASE_USER=""
-ENV DATABASE_PASS=""
-ENV DATABASE_NAME=""
-ENV DATABASE_SSL=0
-
 WORKDIR /app/logos/build/code/service/
-# TODO: Modify docker.settings.json
 
 EXPOSE 50051
 #ENTRYPOINT ["/bin/bash"]
-ENTRYPOINT ["./logos-service", "-c", "./docker.settings.json"]
+ENTRYPOINT ["./logos-service", "-c", "./settings.json"]

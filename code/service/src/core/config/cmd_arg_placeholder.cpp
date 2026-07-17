@@ -14,7 +14,7 @@ namespace acl { namespace logos { namespace core {
         std::sregex_iterator begin(input.begin(), input.end(), envRegex);
         std::sregex_iterator end;
         std::size_t lastPos = 0;
-
+        
         for (auto it = begin; it != end; ++it)
         {
             const std::smatch& match = *it;

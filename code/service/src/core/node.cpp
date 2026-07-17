@@ -7,8 +7,10 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
 
-#include "core/rpc/services/identity_service.h"
 #include "core/rpc/services/status_service.h"
+#include "core/rpc/services/user_service.h"
+#include "core/rpc/services/device_service.h"
+#include "core/rpc/services/identity_service.h"
 
 #include "file.h"
 #include "string_helpers.h"
@@ -151,6 +153,14 @@ namespace acl { namespace logos { namespace core {
         _nodeServiceVect.push_back(statusService);
         _nodeServiceMap["status"] = statusService;
 
+        auto userService = std::shared_ptr<acl::logos::core::rpc::UserService>(new acl::logos::core::rpc::UserService(this));
+        _nodeServiceVect.push_back(userService);
+        _nodeServiceMap["user"] = userService;
+
+        auto deviceService = std::shared_ptr<acl::logos::core::rpc::DeviceService>(new acl::logos::core::rpc::DeviceService(this));
+        _nodeServiceVect.push_back(deviceService);
+        _nodeServiceMap["device"] = deviceService;
+
         auto identityService = std::shared_ptr<acl::logos::core::rpc::IdentityService>(new acl::logos::core::rpc::IdentityService(this));
         _nodeServiceVect.push_back(identityService);
         _nodeServiceMap["identity"] = identityService;
@@ -268,10 +278,11 @@ namespace acl { namespace logos { namespace core {
             LogMessage("Successfully connected to database, now checking schema");
             _db_manager.LoadEntityManagers(this);
 
+            _db_manager.Users().CreateTable();
+            _db_manager.Devices().CreateTable();
             _db_manager.Identities().CreateTable();
-            _db_manager.Wallets().CreateTable();
-            _db_manager.WalletKeys().CreateTable();
-            _db_manager.Transfers().CreateTable();
+            //_db_manager.SignedPreKeys().CreateTable();
+            //_db_manager.OneTimePreKeys().CreateTable();
         } else {
             LogMessage(cpp::utils::stringFormat("Unable to connect to database host: %s",
                 settings.database_settings.host), spdlog::level::err);
