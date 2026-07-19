@@ -32,7 +32,7 @@ namespace acl { namespace logos { namespace core { namespace db {
             return R"(
                 CREATE TABLE IF NOT EXISTS users
                 (
-                    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id              INTEGER AUTO_INCREMENT PRIMARY KEY,
                     first_name      TEXT NOT NULL,
                     last_name       TEXT NOT NULL,
                     display_name    TEXT NOT NULL,
@@ -40,7 +40,7 @@ namespace acl { namespace logos { namespace core { namespace db {
                     email_address   TEXT,
                     email_verified  BOOLEAN NOT NULL DEFAULT FALSE,
                     phone_verified  BOOLEAN NOT NULL DEFAULT FALSE,
-                    created_at      TIMESTAMP NOT NULL
+                    created_at      BIGINT UNSIGNED NOT NULL
                 );
             )";
         }
@@ -91,6 +91,7 @@ namespace acl { namespace logos { namespace core { namespace db {
             user value;
             std::time_t timestamp;
             uint8_t e_verified = 0, p_verified = 0;
+            soci::indicator ind;
 
             sql <<
                 R"(
@@ -107,7 +108,7 @@ namespace acl { namespace logos { namespace core { namespace db {
                     FROM users
                     WHERE id = :id
                 )",
-                soci::into(value.id),
+                soci::into(value.id, ind),
                 soci::into(value.first_name),
                 soci::into(value.last_name),
                 soci::into(value.display_name),
@@ -117,6 +118,11 @@ namespace acl { namespace logos { namespace core { namespace db {
                 soci::into(p_verified),
                 soci::into(timestamp),
                 soci::use(id);
+            
+            if (ind == soci::i_null)
+            {
+                throw soci::soci_error("User not found");
+            }
             
             value.email_verified = e_verified ? true : false;
             value.phone_verified = p_verified ? true : false;
@@ -180,6 +186,7 @@ namespace acl { namespace logos { namespace core { namespace db {
             for (const auto& row : rows)
             {
                 user item;
+                std::time_t timestamp;
 
                 item.id              = row.get<uint64_t>(0);
                 item.first_name      = row.get<std::string>(1);
@@ -189,7 +196,9 @@ namespace acl { namespace logos { namespace core { namespace db {
                 item.email_address   = row.get<std::string>(5);
                 item.email_verified  = row.get<bool>(6);
                 item.phone_verified  = row.get<bool>(7);
-                item.created_at      = row.get<std::chrono::system_clock::time_point>(8);
+
+                timestamp            = row.get<std::time_t>(8);
+                item.created_at      = std::chrono::system_clock::from_time_t(timestamp);
 
                 users.push_back(std::move(item));
             }

@@ -1,8 +1,6 @@
 import grpc
-from google.protobuf.empty_pb2 import Empty
-
-from acl.rpc.v1 import status_pb2
-from acl.rpc.v1 import status_pb2_grpc
+from acl.rpc.e2ee.v1 import user_pb2
+from acl.rpc.e2ee.v1 import user_pb2_grpc
 
 with open("/home/dominic/.config/acl/logos/node/tls/grpc.cert.pem", "rb") as f:
     root_cert = f.read()
@@ -16,10 +14,18 @@ channel = grpc.secure_channel("localhost:50051", creds)            # Local dev
 #    "logos.advancedcomputation.org.uk",
 #    grpc.ssl_channel_credentials()
 #)
-stub = status_pb2_grpc.StatusStub(channel)
+
+stub = user_pb2_grpc.UserServiceStub(channel)
+request_content = user_pb2.CreateUserRequest(
+    first_name = "acl",
+    last_name = "acl",
+    display_name = "Advanced Computation Laboratory",
+    phone_number = "1234567890",
+    email_address = "administrator@advancedcomputation.org.uk",
+)
 
 try:
-    response = stub.Up(Empty())
+    response = stub.CreateUser(request_content)
     print(response)
 except grpc.RpcError as e:
     print("Code:", e.code())

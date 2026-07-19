@@ -7,10 +7,16 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
 
+#include "core/rpc/services/bundle_service.h"
 #include "core/rpc/services/status_service.h"
 #include "core/rpc/services/user_service.h"
 #include "core/rpc/services/device_service.h"
 #include "core/rpc/services/identity_service.h"
+#include "core/rpc/services/chat_service.h"
+#include "core/rpc/services/message_service.h"
+#include "core/rpc/services/negotiation_service.h"
+#include "core/rpc/services/one_time_key_service.h"
+#include "core/rpc/services/signed_pre_key_service.h"
 
 #include "file.h"
 #include "string_helpers.h"
@@ -164,6 +170,18 @@ namespace acl { namespace logos { namespace core {
         auto identityService = std::shared_ptr<acl::logos::core::rpc::IdentityService>(new acl::logos::core::rpc::IdentityService(this));
         _nodeServiceVect.push_back(identityService);
         _nodeServiceMap["identity"] = identityService;
+
+        auto negotiationService = std::shared_ptr<acl::logos::core::rpc::NegotiationService>(new acl::logos::core::rpc::NegotiationService(this));
+        _nodeServiceVect.push_back(negotiationService);
+        _nodeServiceMap["negotiation"] = negotiationService;
+
+        auto messagingService = std::shared_ptr<acl::logos::core::rpc::MessagingService>(new acl::logos::core::rpc::MessagingService(this));
+        _nodeServiceVect.push_back(messagingService);
+        _nodeServiceMap["message"] = messagingService;
+
+        auto chatService = std::shared_ptr<acl::logos::core::rpc::ChatService>(new acl::logos::core::rpc::ChatService(this));
+        _nodeServiceVect.push_back(chatService);
+        _nodeServiceMap["chat"] = chatService;
 
         return true;
     }

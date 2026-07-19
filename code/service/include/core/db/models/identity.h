@@ -31,10 +31,11 @@ namespace acl { namespace logos { namespace core { namespace db {
             return R"(
                 CREATE TABLE IF NOT EXISTS identities
                 (
-                    device_id   INTEGER PRIMARY KEY,
+                    id          INTEGER AUTO_INCREMENT PRIMARY KEY,
+                    device_id   INTEGER NOT NULL,
                     algorithm   INTEGER NOT NULL,
                     public_key  BLOB NOT NULL,
-                    created_at  INTEGER NOT NULL,
+                    created_at  BIGINT UNSIGNED NOT NULL,
                     FOREIGN KEY(device_id) REFERENCES devices(id)
                 );
             )";

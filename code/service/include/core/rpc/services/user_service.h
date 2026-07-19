@@ -30,6 +30,10 @@ namespace acl { namespace logos { namespace core { namespace rpc {
         grpc::Status ListUsers(grpc::ServerContext * context, const acl::rpc::e2ee::v1::ListUsersRequest * request, acl::rpc::e2ee::v1::ListUsersResponse * response) override;
 
     private:
+
+        bool validateCreateUserRequest(const acl::rpc::e2ee::v1::CreateUserRequest * request);
+        bool validateUpdateUserRequest(const acl::rpc::e2ee::v1::UpdateUserRequest * request);
+        
     };
 
 } } } }

@@ -21,8 +21,19 @@ namespace acl { namespace logos { namespace core { namespace rpc {
 
         }
         ~DeviceService() override {}
+        
+        grpc::Status RegisterDevice(grpc::ServerContext * context, const acl::rpc::e2ee::v1::RegisterDeviceRequest * request, acl::rpc::e2ee::v1::RegisterDeviceResponse * response);
+        
+        grpc::Status GetDevice(grpc::ServerContext * context, const acl::rpc::e2ee::v1::GetDeviceRequest * request, acl::rpc::e2ee::v1::GetDeviceResponse * response);
 
-    private:
+        grpc::Status ListUserDevices(grpc::ServerContext * context, const acl::rpc::e2ee::v1::ListUserDevicesRequest * request, acl::rpc::e2ee::v1::ListUserDevicesResponse * response);
+
+        grpc::Status UpdateDevice(grpc::ServerContext * context, const acl::rpc::e2ee::v1::UpdateDeviceRequest * request, acl::rpc::e2ee::v1::UpdateDeviceResponse * response);
+
+        grpc::Status RemoveDevice(grpc::ServerContext * context, const acl::rpc::e2ee::v1::RemoveDeviceRequest * request, google::protobuf::Empty * response);
+
+        grpc::Status TouchDevice(grpc::ServerContext * context, const acl::rpc::e2ee::v1::TouchDeviceRequest * request, google::protobuf::Empty * response);
+
     };
 
 } } } }

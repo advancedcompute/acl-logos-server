@@ -23,7 +23,7 @@ namespace acl { namespace logos { namespace core { namespace rpc {
         }
         ~IdentityService() override {}
 
-        grpc::Status RegisterIdentity(grpc::ServerContext * context, const acl::rpc::e2ee::v1::RegisterIdentityRequest * request, acl::rpc::e2ee::v1::RegisterIdentityResponse * response) override;
+        grpc::Status CreateIdentity(grpc::ServerContext * context, const acl::rpc::e2ee::v1::CreateIdentityRequest * request, acl::rpc::e2ee::v1::CreateIdentityResponse * response) override;
 
         grpc::Status GetIdentity(grpc::ServerContext * context, const acl::rpc::e2ee::v1::GetIdentityRequest * request, acl::rpc::e2ee::v1::GetIdentityResponse * response) override;
 

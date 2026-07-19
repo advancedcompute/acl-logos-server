@@ -2,15 +2,9 @@
 #include "core/rpc/services/status_service.h"
 #include "core/constants.h"
 
-#include <unistd.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include "string_helpers.h"
 #include "base64.h"
 #include "file.h"
-//#include "hash.h"
-#include "uuid.h"
 #include "macros.h"
 
 namespace acl { namespace logos { namespace core { namespace rpc {
