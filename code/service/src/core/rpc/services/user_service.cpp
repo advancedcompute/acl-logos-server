@@ -63,8 +63,7 @@ namespace acl { namespace logos { namespace core { namespace rpc {
         return grpc::Status::OK;
     }
     
-
-
+    
     grpc::Status UserService::GetUser(grpc::ServerContext * context, const acl::rpc::e2ee::v1::GetUserRequest * request, acl::rpc::e2ee::v1::GetUserResponse * response)
     {
         BCService()->LogMessage(cpp::utils::stringFormat("Service request: %s::%s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__));
@@ -104,7 +103,6 @@ namespace acl { namespace logos { namespace core { namespace rpc {
     }
     
     
-
     grpc::Status UserService::UpdateUser(grpc::ServerContext * context, const acl::rpc::e2ee::v1::UpdateUserRequest * request, acl::rpc::e2ee::v1::UpdateUserResponse * response)
     {
         BCService()->LogMessage(cpp::utils::stringFormat("Service request: %s::%s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__));
@@ -191,7 +189,7 @@ namespace acl { namespace logos { namespace core { namespace rpc {
         return grpc::Status::OK;
     }
     
-    
+
     grpc::Status UserService::ListUsers(grpc::ServerContext * context, const acl::rpc::e2ee::v1::ListUsersRequest * request, acl::rpc::e2ee::v1::ListUsersResponse * response)
     {
         BCService()->LogMessage(cpp::utils::stringFormat("Service request: %s::%s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__));

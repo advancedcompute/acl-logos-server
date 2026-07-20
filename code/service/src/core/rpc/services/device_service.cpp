@@ -14,26 +14,43 @@ namespace acl { namespace logos { namespace core { namespace rpc {
 
         try
         {
-            auto user = dbInstance->Users().Retrieve(request->user().value());
-            acl::logos::core::db::device device;
+            if(validateRegisterDeviceRequest(request))
+            {
+                db::user user;
+                try {
+                    user = dbInstance->Users().Retrieve(request->user_id().value());
+                } catch(std::runtime_error& ex)
+                {
+                    BCService()->LogMessage(cpp::utils::stringFormat("Error processing RegisterDevice request: %s", ex.what()), spdlog::level::err);
+                    return grpc::Status(grpc::StatusCode::NOT_FOUND, "User not found");
+                }
 
-            device.user_id = request->user().value();
-            device.device_id = request->client_device_id();
-            device.active = true;
-            device.created_at = std::chrono::system_clock::now();
+                acl::logos::core::db::device device;
+                device.user_id = request->user_id().value();
+                device.device_id = request->client_device_id();
+                device.device_name = request->device_name();
+                device.type = request->type();
+                device.active = true;
+                device.created_at = std::chrono::system_clock::now();
 
-            auto insert_success = dbInstance->Devices().Insert(device);
-            
-            if(insert_success) {
-                auto* proto_device = response->mutable_device();
-                proto_device->mutable_id()->set_value(device.id);
-                proto_device->set_active(device.active);
+                auto insertId = dbInstance->Devices().Insert(device);
+                if(insertId > 0) {
+                    device.id = insertId;
 
-                *proto_device->mutable_created_at() = ToProtoTimestamp(device.created_at);
-                return grpc::Status::OK;
+                    auto* proto_device = response->mutable_device();
+                    proto_device->mutable_id()->set_value(device.id);
+                    proto_device->set_name(device.device_name);
+                    proto_device->set_type( static_cast<acl::rpc::e2ee::v1::DeviceType>(device.type) );
+                    proto_device->set_active(device.active);
+
+                    *proto_device->mutable_created_at() = ToProtoTimestamp(device.created_at);
+                    return grpc::Status::OK;
+                } else {
+                    // TODO
+                    
+                }
             } else {
                 // TODO
-                
             }
         }
         catch (const std::exception& ex)
@@ -51,12 +68,12 @@ namespace acl { namespace logos { namespace core { namespace rpc {
 
         try
         {
-            const auto device = dbInstance->Devices().Retrieve(request->device_id());
+            const auto device = dbInstance->Devices().Retrieve(request->device_id().value());
 
             auto* proto_device = response->mutable_device();
             proto_device->mutable_id()->set_value(device.id);
-            proto_device->set_name("TODO");
-            proto_device->set_type(acl::rpc::e2ee::v1::DeviceType::DEVICE_TYPE_DESKTOP);
+            proto_device->set_name( device.device_name );
+            proto_device->set_type( static_cast<acl::rpc::e2ee::v1::DeviceType>(device.type) );
             proto_device->set_active(device.active);
 
             *proto_device->mutable_created_at() = ToProtoTimestamp(device.created_at);
@@ -80,21 +97,19 @@ namespace acl { namespace logos { namespace core { namespace rpc {
         auto dbInstance = (acl::logos::core::db::DatabaseManager*)(BCService()->DatabaseManager());
 
         try {
-            /*
-            const auto devices = dbInstance->Devices().RetrieveByUserId(request->user_id());
+            const auto devices = dbInstance->Devices().RetrieveByUserId(request->user_id().value());
 
             for (const auto& device : devices)
             {
                 auto* proto_device = response->add_devices();
-
-                proto_device->set_id(device.id);
-                proto_device->set_user_id(device.user_id);
-                proto_device->set_device_id(device.device_id);
+                proto_device->mutable_id()->set_value(device.id);
+                proto_device->set_name(device.device_name);
+                proto_device->set_type( static_cast<acl::rpc::e2ee::v1::DeviceType>(device.type) );
                 proto_device->set_active(device.active);
 
                 *proto_device->mutable_created_at() = ToProtoTimestamp(device.created_at);
+                *proto_device->mutable_last_seen_at() = ToProtoTimestamp(device.last_seen_at);
             }
-            */
             return grpc::Status::OK;
         }
         catch (const std::exception& ex)
@@ -113,27 +128,33 @@ namespace acl { namespace logos { namespace core { namespace rpc {
         auto dbInstance = (acl::logos::core::db::DatabaseManager*)(BCService()->DatabaseManager());
 
         try {
-            /*
-            auto device = dbInstance->Devices().Retrieve(request->device_id());
-            
-            // Current model doesn't have a device_name field.
-            // Uncomment this when added.
-            // if (request->has_device_name())
-            //     device.device_name = request->device_name();
 
-            if (request->has_active())
-                device.active = request->active();
+            if(validateUpdateDeviceRequest(request))
+            {
+                auto device = dbInstance->Devices().Retrieve(request->device_id().value());
             
-            dbInstance->Devices().Update(device);
-            auto* proto_device = response->mutable_device();
+                // Current model doesn't have a device_name field.
+                // Uncomment this when added.
+                if (request->has_device_name())
+                    device.device_name = request->device_name();
 
-            proto_device->set_id(device.id);
-            proto_device->set_user_id(device.user_id);
-            proto_device->set_device_id(device.device_id);
-            proto_device->set_active(device.active);
-            *proto_device->mutable_created_at() = ToProtoTimestamp(device.created_at);
-            */
-            
+                if (request->has_active())
+                    device.active = request->active();
+                
+                dbInstance->Devices().Update(device);
+                auto* proto_device = response->mutable_device();
+
+                proto_device->mutable_id()->set_value(device.id);
+                proto_device->set_name(device.device_name);
+                proto_device->set_type( static_cast<acl::rpc::e2ee::v1::DeviceType>(device.type) );
+                proto_device->set_active(device.active);
+
+                *proto_device->mutable_created_at() = ToProtoTimestamp(device.created_at);
+                *proto_device->mutable_last_seen_at() = ToProtoTimestamp(device.last_seen_at);
+
+            } else {
+                // TODO
+            }
             return grpc::Status::OK;
         }
         catch (const std::exception& ex)
@@ -141,7 +162,6 @@ namespace acl { namespace logos { namespace core { namespace rpc {
             BCService()->LogMessage(cpp::utils::stringFormat("Error processing UpdateDevice request: %s", ex.what()), spdlog::level::err);
             return grpc::Status(grpc::StatusCode::INTERNAL, ex.what());
         }
-
         return grpc::Status::OK;
     }
 
@@ -152,7 +172,7 @@ namespace acl { namespace logos { namespace core { namespace rpc {
         auto dbInstance = (acl::logos::core::db::DatabaseManager*)(BCService()->DatabaseManager());
 
         try {
-            auto device = dbInstance->Devices().Retrieve(request->device_id());
+            auto device = dbInstance->Devices().Retrieve(request->device_id().value());
             dbInstance->Devices().Delete(device);
             return grpc::Status::OK;
         }
@@ -171,7 +191,7 @@ namespace acl { namespace logos { namespace core { namespace rpc {
         auto dbInstance = (acl::logos::core::db::DatabaseManager*)(BCService()->DatabaseManager());
 
         try {
-            auto device = dbInstance->Devices().Retrieve(request->device_id());
+            auto device = dbInstance->Devices().Retrieve(request->device_id().value());
             device.last_seen_at = std::chrono::system_clock::now();
 
             dbInstance->Devices().Update(device);
@@ -184,6 +204,22 @@ namespace acl { namespace logos { namespace core { namespace rpc {
         }
 
         return grpc::Status::OK;
+    }
+    
+
+
+    bool DeviceService::validateRegisterDeviceRequest(const acl::rpc::e2ee::v1::RegisterDeviceRequest * request)
+    {
+
+
+        return true;
+    }
+
+    bool DeviceService::validateUpdateDeviceRequest(const acl::rpc::e2ee::v1::UpdateDeviceRequest * request)
+    {
+
+
+        return true;
     }
     
 } } } }

@@ -34,6 +34,12 @@ namespace acl { namespace logos { namespace core { namespace rpc {
 
         grpc::Status TouchDevice(grpc::ServerContext * context, const acl::rpc::e2ee::v1::TouchDeviceRequest * request, google::protobuf::Empty * response);
 
+    private:
+
+        bool validateRegisterDeviceRequest(const acl::rpc::e2ee::v1::RegisterDeviceRequest * request);
+
+        bool validateUpdateDeviceRequest(const acl::rpc::e2ee::v1::UpdateDeviceRequest * request);
+        
     };
 
 } } } }

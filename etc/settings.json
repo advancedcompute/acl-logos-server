@@ -50,6 +50,7 @@
         "max_message_size_mb": "${GRPC_MAX_MESSAGE_SIZE_MB}",
         "keep_alive_time_ms": 30000,
         "keep_alive_timeout_ms": 10000,
+        "admin_mode_enabled": "${GRPC_ADMIN_MODE}",
         "tls": {
             "enabled": "${GRPC_TLS}",
             "force_client_auth": false,

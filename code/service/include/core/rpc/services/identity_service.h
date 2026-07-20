@@ -27,6 +27,8 @@ namespace acl { namespace logos { namespace core { namespace rpc {
 
         grpc::Status GetIdentity(grpc::ServerContext * context, const acl::rpc::e2ee::v1::GetIdentityRequest * request, acl::rpc::e2ee::v1::GetIdentityResponse * response) override;
 
+        grpc::Status ListIdentities(grpc::ServerContext * context, const acl::rpc::e2ee::v1::ListIdentitiesRequest * request, acl::rpc::e2ee::v1::ListIdentitiesResponse * response) override;
+
     private:
     };
 

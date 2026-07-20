@@ -13,6 +13,8 @@ namespace acl { namespace logos { namespace core { namespace db {
         uint64_t id;
         uint64_t user_id;
         std::string device_id;
+        std::string device_name;
+        int type;
         bool active;
 
         std::chrono::system_clock::time_point created_at;
@@ -30,6 +32,8 @@ namespace acl { namespace logos { namespace core { namespace db {
                     id              INTEGER AUTO_INCREMENT PRIMARY KEY,
                     user_id         INTEGER NOT NULL,
                     device_id       TEXT NOT NULL,
+                    device_name     TEXT NOT NULL,
+                    type            INTEGER NOT NULL,
                     active          BOOLEAN NOT NULL DEFAULT FALSE,
                     created_at      BIGINT UNSIGNED NOT NULL,
                     last_seen_at    INTEGER NOT NULL,
@@ -51,6 +55,8 @@ namespace acl { namespace logos { namespace core { namespace db {
                     (
                         user_id,
                         device_id,
+                        device_name,
+                        type,
                         active,
                         created_at,
                         last_seen_at
@@ -59,6 +65,8 @@ namespace acl { namespace logos { namespace core { namespace db {
                     (
                         :user_id,
                         :device_id,
+                        :device_name,
+                        :type,
                         :active,
                         :created_at,
                         :last_seen_at
@@ -66,6 +74,8 @@ namespace acl { namespace logos { namespace core { namespace db {
                 )",
                 soci::use(value.user_id),
                 soci::use(value.device_id),
+                soci::use(value.device_name),
+                soci::use(value.type),
                 soci::use(active),
                 soci::use(created_at),
                 soci::use(last_seen_at);
@@ -84,6 +94,8 @@ namespace acl { namespace logos { namespace core { namespace db {
                         id,
                         user_id,
                         device_id,
+                        device_name,
+                        type,
                         active,
                         created_at,
                         last_seen_at
@@ -93,6 +105,8 @@ namespace acl { namespace logos { namespace core { namespace db {
                 soci::into(value.id),
                 soci::into(value.user_id),
                 soci::into(value.device_id),
+                soci::into(value.device_name),
+                soci::into(value.type),
                 soci::into(active),
                 soci::into(created_at),
                 soci::into(last_seen_at),
@@ -115,6 +129,8 @@ namespace acl { namespace logos { namespace core { namespace db {
                             id,
                             user_id,
                             device_id,
+                            device_name,
+                            type,
                             active,
                             created_at,
                             last_seen_at
@@ -126,13 +142,15 @@ namespace acl { namespace logos { namespace core { namespace db {
             for (const auto& row : rows)
             {
                 device value;
-                std::time_t created_at = row.get<std::time_t>(4);
-                std::time_t last_seen_at = row.get<std::time_t>(5);
+                std::time_t created_at = row.get<std::time_t>(6);
+                std::time_t last_seen_at = row.get<std::time_t>(7);
 
                 value.id = row.get<uint64_t>(0);
                 value.user_id = row.get<uint64_t>(1);
                 value.device_id = row.get<std::string>(2);
-                value.active = row.get<bool>(3);
+                value.device_name = row.get<std::string>(3);
+                value.type = row.get<int>(4);
+                value.active = row.get<bool>(5);
                 value.created_at = std::chrono::system_clock::from_time_t(created_at);
                 value.last_seen_at = std::chrono::system_clock::from_time_t(last_seen_at);
 
@@ -154,6 +172,8 @@ namespace acl { namespace logos { namespace core { namespace db {
                     SET
                         user_id = :user_id,
                         device_id = :device_id,
+                        device_name = :device_name,
+                        type = :type,
                         active = :active,
                         created_at = :created_at,
                         last_seen_at = :last_seen_at
@@ -161,6 +181,8 @@ namespace acl { namespace logos { namespace core { namespace db {
                 )",
                 soci::use(value.user_id),
                 soci::use(value.device_id),
+                soci::use(value.device_name),
+                soci::use(value.type),
                 soci::use(active),
                 soci::use(created_at),
                 soci::use(last_seen_at),
@@ -184,6 +206,8 @@ namespace acl { namespace logos { namespace core { namespace db {
                             id,
                             user_id,
                             device_id,
+                            device_name,
+                            type,
                             active,
                             created_at,
                             last_seen_at
@@ -194,13 +218,15 @@ namespace acl { namespace logos { namespace core { namespace db {
             for (const auto& row : rows)
             {
                 device value;
-                std::time_t created_at = row.get<std::time_t>(4);
-                std::time_t last_seen_at = row.get<std::time_t>(5);
+                std::time_t created_at = row.get<std::time_t>(6);
+                std::time_t last_seen_at = row.get<std::time_t>(7);
 
                 value.id = row.get<uint64_t>(0);
                 value.user_id = row.get<uint64_t>(1);
                 value.device_id = row.get<std::string>(2);
-                value.active = row.get<bool>(3);
+                value.device_name = row.get<std::string>(3);
+                value.type = row.get<int>(4);
+                value.active = row.get<bool>(5);
                 value.created_at = std::chrono::system_clock::from_time_t(created_at);
                 value.last_seen_at = std::chrono::system_clock::from_time_t(last_seen_at);
 
