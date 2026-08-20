@@ -19,8 +19,8 @@ void sig_handler(int signum)
 int main(int argc, char * argv[])
 {
     signal(SIGINT, sig_handler);
-    //signal(SIGABRT, sig_handler);
-    //signal(SIGSEGV, sig_handler);
+    signal(SIGTERM, sig_handler);
+    signal(SIGABRT, sig_handler);
     
     acl::logos::core::LogosSvcCMDArgParser cmdArgParser(acl::logos::core::ApplicationInfo(
         PRODUCT_NAME, ORGANIZATION_NAME, PRODUCT_VERSION_STR, PRODUCT_COPYRIGHT_STR, PRODUCT_DESCRIPTION

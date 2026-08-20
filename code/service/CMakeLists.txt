@@ -59,7 +59,7 @@ include_directories(
 
 link_directories(
     /lib/x86_64-linux-gnu/
-
+    /usr/local/lib/
 )
 
 set(LIBS_LINK

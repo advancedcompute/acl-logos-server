@@ -21,19 +21,15 @@ with open("/home/dominic/.config/acl/logos/node/tls/grpc.cert.pem", "rb") as f:
 
 
 stub = identity_pb2_grpc.IdentityServiceStub(channel)
-request_content = identity_pb2.CreateIdentityRequest(
-    device_id=common_pb2.DeviceId(
-        value=2
-    ),
-    public_key=common_pb2.IdentityKey(
-        algorithm=common_pb2.KeyAlgorithm.ED25519,
-        key=public_key
+request_content = identity_pb2.GetIdentityRequest(
+    identity_id=common_pb2.IdentityId(
+        value=1
     )
 )
 
 
 try:
-    response = stub.CreateIdentity(request_content)
+    response = stub.GetIdentity(request_content)
     print(response)
 except grpc.RpcError as e:
     print("Code:", e.code())

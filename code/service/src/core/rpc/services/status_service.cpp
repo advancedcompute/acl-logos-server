@@ -2,20 +2,14 @@
 #include "core/rpc/services/status_service.h"
 #include "core/constants.h"
 
-#include <unistd.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include "string_helpers.h"
 #include "base64.h"
 #include "file.h"
-//#include "hash.h"
-#include "uuid.h"
 #include "macros.h"
 
 namespace acl { namespace logos { namespace core { namespace rpc {
 
-    grpc::Status StatusService::Up(grpc::ServerContext * context, const google::protobuf::Empty * request, acl::rpc::v1::StatusInfo * response)
+    grpc::Status StatusService::Up(grpc::ServerContext * context, const google::protobuf::Empty * request, acl::rpc::e2ee::v1::StatusInfo * response)
     {
         BCService()->LogMessage(cpp::utils::stringFormat("Service request: %s::%s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__));
 
@@ -29,15 +23,7 @@ namespace acl { namespace logos { namespace core { namespace rpc {
         response->set_branch(GIT_BRANCH_NAME);
         response->set_commit(GIT_LAST_COMMIT);
         response->set_org_name(ORGANIZATION_NAME);
-        response->set_org_domain(ORGANIZATION_DOMAIN);;
-
-        char buff[BUFSIZ];
-        struct hostent * host_entry;
-        if(gethostname(buff, BUFSIZ) == 0) {
-            response->set_hostname(buff);
-            host_entry = gethostbyname(buff);
-            response->set_ip(inet_ntoa(*((struct in_addr*) host_entry->h_addr_list[0])));
-        }
+        response->set_org_domain(ORGANIZATION_DOMAIN);
 
         // Start time //
         auto startTime = BCService()->start_time().time_since_epoch();

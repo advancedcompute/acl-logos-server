@@ -11,12 +11,12 @@
             "program": "${workspaceFolder}/build/code/service/logos-service",
             "args": [
                 "-c",
-                "${workspaceFolder}/build/code/service/cloud.settings.json"
+                "${workspaceFolder}/build/code/service/docker.settings.json"
             ],
-            "stopAtEntry": false,
+            "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": false,
+            "externalConsole": true,
             "MIMode": "gdb",
             "miDebuggerPath": "/usr/bin/gdb",
             "setupCommands": [

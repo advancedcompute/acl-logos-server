@@ -7,6 +7,7 @@
 
 #include "core/constants.h"
 #include "core/config/cmd_arg_options.h"
+#include "core/config/cmd_arg_placeholder.h"
 #include "core/config/cmd_arg_serializer.h"
 #include "core/config/cmd_arg_validator.h"
 
@@ -101,8 +102,20 @@ namespace acl { namespace logos { namespace core {
                     {
                         if(_serializer.convert(configSettings, _settings))
                         {
+                            // Env var placeholder resolution
+                            SettingsPlaceholder ph;
+                            try {
+                                ph.resolve_placeholders(_settings, _settings);
+                            } catch(std::runtime_error& ex)
+                            {
+                                printf("Error resolving environment variable placeholder: %s\n", ex.what());
+                                ++errorCount;
+                                return errorCount;  // Automatic validation failure. No point continuing
+                            }
+
+                            // Validation
                             SettingsValidator validator([](const std::string& paramName, const std::string& paramValue, const std::string& errorMsg) {
-                                printf("Error validating field '%s' - '%s' is not valid: %s\n", paramName.c_str(), paramValue.c_str(), errorMsg.c_str());
+                                printf("Error validating field '%s' (value: '%s'): %s\n", paramName.c_str(), paramValue.c_str(), errorMsg.c_str());
                             });
                             
                             auto validationErrorCount = validator.validate(_settings);

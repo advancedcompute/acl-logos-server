@@ -44,7 +44,7 @@ namespace acl { namespace logos { namespace core {
             cpp::utils::RSA     identity_rsa_key;
 
             std::vector<std::string> permittedKeyTypes = {
-                "rsa", "ecc", "ed25519"
+                "ecc", "ed25519"
             };
 
     };

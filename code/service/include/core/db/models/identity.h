@@ -4,254 +4,215 @@
 #include "_traits.h"
 #include <cstdint>
 #include <string>
-#include <map>
 #include <vector>
 #include <json/json.h>
 //#include "file.h"
+#include <chrono>
+#include "one_time_pre_key.h"
+
 
 namespace acl { namespace logos { namespace core { namespace db {
 
-    enum class IdentityType: int
+    struct identity
     {
-        PERSON = 0,
-        COMPANY = 1,
-        VALIDATOR = 2,
-        SERVICE = 3,
-        ORACLE = 4,
-        DAO = 5,
+        uint64_t id;
+        uint64_t device_id;
+        int algorithm;
+        std::string public_key;
+        //std::vector<uint64_t> one_time_pre_keys;          // TODO: Move to another table. 1-to-N relationship
+        std::chrono::system_clock::time_point created_at;
     };
 
-    struct Identity
-    {
-        std::string identity_id;
-        IdentityType identity_type;
-        std::string public_key;
-        bool verified = false;
-        bool active = false;
-        uint64_t created_at;
-        std::map<std::string, std::string> metadata;
-    };
 
     template<>
-    struct TableTraits<Identity>
+    struct TableTraits<identity>
     {
-        static constexpr const char* TableName = "identities";
-        static constexpr const char* PrimaryKey = "identity_id";
-
         static std::string CreateTable()
         {
             return R"(
                 CREATE TABLE IF NOT EXISTS identities
                 (
-                    identity_id     VARCHAR(64) PRIMARY KEY,
-                    identity_type   INTEGER NOT NULL,
-                    public_key      TEXT NOT NULL,
-                    verified        BOOLEAN NOT NULL,
-                    active          BOOLEAN NOT NULL,
-                    created_at      BIGINT NOT NULL,
-                    metadata        TEXT
-                )
+                    id          INTEGER PRIMARY KEY AUTO_INCREMENT,
+                    device_id   INTEGER NOT NULL,
+                    algorithm   INTEGER NOT NULL,
+                    public_key  BLOB NOT NULL,
+                    created_at  BIGINT NOT NULL,
+                    FOREIGN KEY(device_id) REFERENCES devices(id)
+                );
             )";
         }
 
-        static void Insert(soci::session& sql, const Identity& identity)
-        {
-            const int type = static_cast<int>(identity.identity_type);
-            const std::string metadata = SerializeMetadata(identity.metadata);
-            const int verified = static_cast<int>(identity.verified);
-            const int active = static_cast<int>(identity.active);
 
-            sql << R"(
-                INSERT INTO identities
-                (
-                    identity_id,
-                    identity_type,
-                    public_key,
-                    verified,
-                    active,
-                    created_at,
-                    metadata
-                )
-                VALUES
-                (
-                    :identity_id,
-                    :identity_type,
-                    :public_key,
-                    :verified,
-                    :active,
-                    :created_at,
-                    :metadata
-                )
-            )",
-            soci::use(identity.identity_id),
-            soci::use(type),
-            soci::use(identity.public_key),
-            soci::use(verified),
-            soci::use(active),
-            soci::use(identity.created_at),
-            soci::use(metadata);
+        static void Insert(soci::session& sql, const identity& value)
+        {
+            auto created_at = std::chrono::system_clock::to_time_t(value.created_at);
+
+            sql <<
+                R"(
+                    INSERT INTO identities
+                    (
+                        device_id,
+                        algorithm,
+                        public_key,
+                        created_at
+                    )
+                    VALUES
+                    (
+                        :device_id,
+                        :algorithm,
+                        :public_key,
+                        :created_at
+                    )
+                )",
+                soci::use(value.device_id),
+                soci::use(value.algorithm),
+                soci::use(value.public_key),
+                soci::use(created_at);
         }
 
-        static Identity Retrieve(soci::session& sql, const std::string& identityId)
+
+        static identity Retrieve(soci::session& sql, uint64_t id)
         {
-            Identity identity;
+            identity value;
+            std::time_t created_at;
 
-            int type;
-            std::string metadata;
-            int verified=0, active=0;
+            soci::statement st =
+            (
+                sql.prepare <<
+                R"(
+                    SELECT
+                        id,
+                        device_id,
+                        algorithm,
+                        public_key,
+                        created_at
+                    FROM identities
+                    WHERE id = :id
+                )",
+                soci::into(value.id),
+                soci::into(value.device_id),
+                soci::into(value.algorithm),
+                soci::into(value.public_key),
+                soci::into(created_at),
+                soci::use(id)
+            );
 
-            sql << R"(
-                SELECT
-                    identity_id,
-                    identity_type,
-                    public_key,
-                    verified,
-                    active,
-                    created_at,
-                    metadata
-                FROM identities
-                WHERE identity_id = :identity_id
-            )",
-            soci::into(identity.identity_id),
-            soci::into(type),
-            soci::into(identity.public_key),
-            soci::into(verified),
-            soci::into(active),
-            soci::into(identity.created_at),
-            soci::into(metadata),
-            soci::use(identityId);
+            st.execute(true);
 
-            identity.identity_type = static_cast<IdentityType>(type);
-            identity.verified = static_cast<bool>(verified);
-            identity.active = static_cast<bool>(active);
+            if (!st.got_data()) throw std::runtime_error("Identity not found.");
 
-            identity.metadata = DeserializeMetadata(metadata);
-            return identity;
+            value.created_at = std::chrono::system_clock::from_time_t(created_at);
+            return value;
         }
 
-        static void Update(soci::session& sql, const Identity& identity)
-        {
-            const int type = static_cast<int>(identity.identity_type);
-            const std::string metadata = SerializeMetadata(identity.metadata);
-            const int verified = static_cast<int>(identity.verified);
-            const int active = static_cast<int>(identity.active);
 
-            sql << R"(
-                UPDATE identities
-                SET
-                    identity_type = :identity_type,
-                    public_key = :public_key,
-                    verified = :verified,
-                    active = :active,
-                    created_at = :created_at,
-                    metadata = :metadata
-                WHERE
-                    identity_id = :identity_id
-            )",
-            soci::use(type),
-            soci::use(identity.public_key),
-            soci::use(verified),
-            soci::use(active),
-            soci::use(identity.created_at),
-            soci::use(metadata),
-            soci::use(identity.identity_id);
+        static void Update(soci::session& sql, const identity& value)
+        {
+            auto created_at =
+                std::chrono::system_clock::to_time_t(value.created_at);
+
+            sql <<
+                R"(
+                    UPDATE identities
+                    SET
+                        device_id = :device_id,
+                        algorithm = :algorithm,
+                        public_key = :public_key,
+                        created_at = :created_at
+                    WHERE id = :id
+                )",
+                soci::use(value.device_id),
+                soci::use(value.algorithm),
+                soci::use(value.public_key),
+                soci::use(created_at),
+                soci::use(value.id);
         }
 
-        static void Delete(soci::session& sql, const Identity& identity)
+
+        static void Delete(soci::session& sql, const identity& value)
         {
-            sql << R"(
-                DELETE FROM identities
-                WHERE identity_id = :identity_id
-            )",
-            soci::use(identity.identity_id);
+            sql <<
+                "DELETE FROM identities WHERE id = :id",
+                soci::use(value.id);
         }
 
-        static std::vector<Identity> RetrieveAll(soci::session& sql)
+
+        static std::vector<identity> RetrieveAll(soci::session& sql)
         {
-            soci::rowset<soci::row> rs = (sql.prepare << "SELECT * FROM identities");
+            std::vector<identity> identities;
 
-            std::vector<Identity> identities;
+            soci::rowset<soci::row> rows =
+                (sql.prepare <<
+                    R"(
+                        SELECT
+                            id,
+                            device_id,
+                            algorithm,
+                            public_key,
+                            created_at
+                        FROM identities
+                    )");
 
-            for (const auto& row : rs)
+            for (const auto& row : rows)
             {
-                //int verified=0, active=0;
-                Identity identity;
-                identity.identity_id = row.get<std::string>("identity_id");
-                identity.identity_type = static_cast<IdentityType>(row.get<int>("identity_type"));
-                identity.public_key = row.get<std::string>("public_key");
-                identity.verified = row.get<int>("verified");
-                identity.active = row.get<int>("active");
-                identity.created_at = row.get<uint64_t>("created_at");
+                identity value;
 
-                identity.metadata = DeserializeMetadata(row.get<std::string>("metadata"));
-                identities.push_back(std::move(identity));
+                std::time_t created_at =
+                    row.get<std::time_t>(4);
+
+                value.id = row.get<uint64_t>(0);
+                value.device_id = row.get<uint64_t>(1);
+                value.algorithm = row.get<int>(2);
+                value.public_key = row.get<std::string>(3);
+                value.created_at =
+                    std::chrono::system_clock::from_time_t(created_at);
+
+                identities.push_back(std::move(value));
             }
+
             return identities;
         }
 
-        static Json::Value JsonMetadata(const std::map<std::string, std::string>& metadata)
-        {
-            Json::Value jsonObj;
-            for(auto& md : metadata) {
-                jsonObj[md.first] = md.second;
-            }
-            return jsonObj;
-        }
 
-        static Json::Value JsonMetadata(const std::string& metadata)
+        static std::vector<identity> RetrieveByDeviceId(
+            soci::session& sql,
+            uint64_t device_id)
         {
-            Json::CharReaderBuilder rbuilder;
-            Json::CharReader * reader = rbuilder.newCharReader();
-            std::string parseErrors;        // Note: this var is thrown away
-            Json::Value contents;
+            std::vector<identity> identities;
 
-            if( !reader->parse(metadata.data(), metadata.data() + metadata.size(), &contents, &parseErrors) )
+            soci::rowset<soci::row> rows =
+                (sql.prepare <<
+                    R"(
+                        SELECT
+                            id,
+                            device_id,
+                            algorithm,
+                            public_key,
+                            created_at
+                        FROM identities
+                        WHERE device_id = :device_id
+                    )",
+                    soci::use(device_id));
+
+            for (const auto& row : rows)
             {
-                // TODO
+                identity value;
+
+                std::time_t created_at =
+                    row.get<std::time_t>(4);
+
+                value.id = row.get<uint64_t>(0);
+                value.device_id = row.get<uint64_t>(1);
+                value.algorithm = row.get<int>(2);
+                value.public_key = row.get<std::string>(3);
+                value.created_at =
+                    std::chrono::system_clock::from_time_t(created_at);
+
+                identities.push_back(std::move(value));
             }
-            return contents;
+
+            return identities;
         }
-        
-        static std::string SerializeMetadata(const std::map<std::string, std::string>& metadata)
-        {
-            Json::Value jsonObj = JsonMetadata(metadata);
-
-            std::stringstream ss;
-            try {
-                // Configure writer for pretty output
-                Json::StreamWriterBuilder writerBuilder;
-                writerBuilder["indentation"] = "  "; // 2 spaces for readability
-                std::unique_ptr<Json::StreamWriter> writer(writerBuilder.newStreamWriter());
-                writer->write(jsonObj, &ss);
-            } catch (const std::exception& e) {
-                // TODO: Handle this better
-            }
-            return ss.str();
-        }
-
-        static std::map<std::string, std::string> DeserializeMetadata(Json::Value& metadata)
-        {
-            std::map<std::string, std::string> retMap;
-            for(const std::string& member : metadata.getMemberNames())
-            {
-                retMap[member] = metadata[member].asString();
-            }
-            return retMap;
-        }
-
-        static std::map<std::string, std::string> DeserializeMetadata(const std::string& metadata)
-        {
-            std::map<std::string, std::string> retMap;
-            Json::Value contents = JsonMetadata(metadata);
-
-            for(auto& member : contents.getMemberNames())
-            {
-                retMap[member] = contents[member].asString();
-            }
-            return retMap;
-        }
-
-
     };
 
 

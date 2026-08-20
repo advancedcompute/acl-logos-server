@@ -7,8 +7,16 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
 
-#include "core/rpc/services/identity_service.h"
+#include "core/rpc/services/bundle_service.h"
 #include "core/rpc/services/status_service.h"
+#include "core/rpc/services/user_service.h"
+#include "core/rpc/services/device_service.h"
+#include "core/rpc/services/identity_service.h"
+#include "core/rpc/services/chat_service.h"
+#include "core/rpc/services/message_service.h"
+#include "core/rpc/services/negotiation_service.h"
+#include "core/rpc/services/one_time_key_service.h"
+#include "core/rpc/services/signed_pre_key_service.h"
 
 #include "file.h"
 #include "string_helpers.h"
@@ -103,17 +111,26 @@ namespace acl { namespace logos { namespace core {
         auto initTLS = false;
         if(settings.grpc_settings.tls.use_tls)
         {
-            std::string certPem, keyPem;
-            if(cpp::utils::read_file_contents(settings.grpc_settings.tls.cert_path, certPem) &&
+            std::string certPem, keyPem, caPem;
+            if(cpp::utils::read_file_contents(settings.grpc_settings.tls.ca_path, caPem) &&
+                cpp::utils::read_file_contents(settings.grpc_settings.tls.cert_path, certPem) &&
                 cpp::utils::read_file_contents(settings.grpc_settings.tls.key_path, keyPem))
             {
-                //grpc::SslServerCredentialsOptions sslCertOptions(GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY);
-                grpc::SslServerCredentialsOptions sslCertOptions(GRPC_SSL_REQUEST_CLIENT_CERTIFICATE_BUT_DONT_VERIFY);
+                grpc::SslServerCredentialsOptions sslCertOptions;
+
+                if(settings.grpc_settings.tls.client_auth) {
+                    sslCertOptions.client_certificate_request = GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY;
+                    sslCertOptions.force_client_auth = true;
+                } else {
+                    sslCertOptions.client_certificate_request = GRPC_SSL_REQUEST_CLIENT_CERTIFICATE_BUT_DONT_VERIFY;
+                    sslCertOptions.force_client_auth = false;
+                }
+                
                 grpc::SslServerCredentialsOptions::PemKeyCertPair keyCertPair = {
                     keyPem, certPem
                 };
 
-                sslCertOptions.force_client_auth = false;
+                sslCertOptions.pem_root_certs = caPem;
                 sslCertOptions.pem_key_cert_pairs.push_back(keyCertPair);
                 _credentials = grpc::SslServerCredentials(sslCertOptions);
 
@@ -142,9 +159,29 @@ namespace acl { namespace logos { namespace core {
         _nodeServiceVect.push_back(statusService);
         _nodeServiceMap["status"] = statusService;
 
+        auto userService = std::shared_ptr<acl::logos::core::rpc::UserService>(new acl::logos::core::rpc::UserService(this));
+        _nodeServiceVect.push_back(userService);
+        _nodeServiceMap["user"] = userService;
+
+        auto deviceService = std::shared_ptr<acl::logos::core::rpc::DeviceService>(new acl::logos::core::rpc::DeviceService(this));
+        _nodeServiceVect.push_back(deviceService);
+        _nodeServiceMap["device"] = deviceService;
+
         auto identityService = std::shared_ptr<acl::logos::core::rpc::IdentityService>(new acl::logos::core::rpc::IdentityService(this));
         _nodeServiceVect.push_back(identityService);
         _nodeServiceMap["identity"] = identityService;
+
+        auto negotiationService = std::shared_ptr<acl::logos::core::rpc::NegotiationService>(new acl::logos::core::rpc::NegotiationService(this));
+        _nodeServiceVect.push_back(negotiationService);
+        _nodeServiceMap["negotiation"] = negotiationService;
+
+        auto messagingService = std::shared_ptr<acl::logos::core::rpc::MessagingService>(new acl::logos::core::rpc::MessagingService(this));
+        _nodeServiceVect.push_back(messagingService);
+        _nodeServiceMap["message"] = messagingService;
+
+        auto chatService = std::shared_ptr<acl::logos::core::rpc::ChatService>(new acl::logos::core::rpc::ChatService(this));
+        _nodeServiceVect.push_back(chatService);
+        _nodeServiceMap["chat"] = chatService;
 
         return true;
     }
@@ -208,6 +245,11 @@ namespace acl { namespace logos { namespace core {
         ss << "user=" << settings.database_settings.username << " ";
         ss << "password='" << settings.database_settings.password << "' ";
 
+        if(!settings.database_settings.unix_socket.empty())
+        {
+            ss << "unix_socket=" << settings.database_settings.unix_socket << " ";
+        }
+
         if(settings.database_settings.certificate.use_tls)
         {
             ss << "sslcert=" << cpp::utils::full_resolve_path(settings.database_settings.certificate.cert_path).c_str() << " ";
@@ -254,10 +296,11 @@ namespace acl { namespace logos { namespace core {
             LogMessage("Successfully connected to database, now checking schema");
             _db_manager.LoadEntityManagers(this);
 
+            _db_manager.Users().CreateTable();
+            _db_manager.Devices().CreateTable();
             _db_manager.Identities().CreateTable();
-            _db_manager.Wallets().CreateTable();
-            _db_manager.WalletKeys().CreateTable();
-            _db_manager.Transfers().CreateTable();
+            //_db_manager.SignedPreKeys().CreateTable();
+            //_db_manager.OneTimePreKeys().CreateTable();
         } else {
             LogMessage(cpp::utils::stringFormat("Unable to connect to database host: %s",
                 settings.database_settings.host), spdlog::level::err);

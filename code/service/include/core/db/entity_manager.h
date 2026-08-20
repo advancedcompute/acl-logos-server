@@ -39,19 +39,19 @@ namespace acl { namespace logos { namespace core { namespace db {
         }
 
         /// Inserts a single entity.
-        bool Insert(const SQLModel& item)
+        uint64_t Insert(const SQLModel& item)
         {
-            bool success = false;
+            uint64_t id = 0;
             soci::transaction tx(m_sql);
             try {
                 TableTraits<SQLModel>::Insert(m_sql, item);
                 tx.commit();
-                success = true;
+                id = GetLastInsertId(m_sql);
             } catch(soci::soci_error& ex) {
                 _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
                 tx.rollback();
             }
-            return success;
+            return id;
         }
 
         /// Inserts a collection of entities.
@@ -68,12 +68,24 @@ namespace acl { namespace logos { namespace core { namespace db {
         }
 
         /// Retrieves an entity by its primary key.
-        SQLModel Retrieve(const std::string& id)
+        SQLModel Retrieve(uint64_t id)
         {
             try {
                 return TableTraits<SQLModel>::Retrieve(m_sql, id);
             } catch(soci::soci_error& ex) {
                 _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
+                throw std::runtime_error(ex.what());
+            }
+        }
+
+        /// Retrieves records by user Id
+        std::vector<SQLModel> RetrieveByUserId(uint64_t id)
+        {
+            try {
+                return TableTraits<SQLModel>::RetrieveByUserId(m_sql, id);
+            } catch(soci::soci_error& ex) {
+                _bc_node->LogMessage(cpp::utils::stringFormat("DB Error (%s::%s): %s", __CLASS_NAME_CSTR__, __METHOD_NAME_CSTR__, ex.what()), spdlog::level::err);
+                throw std::runtime_error(ex.what());
             }
         }
 
@@ -143,6 +155,19 @@ namespace acl { namespace logos { namespace core { namespace db {
 
 
     private:
+
+        uint64_t GetLastInsertId(soci::session& sql)
+        {
+            uint64_t id = 0;
+            if(sql.get_backend_name() == "mysql") {
+                sql << "SELECT LAST_INSERT_ID()", soci::into(id);
+            } else if (sql.get_backend_name() == "postgresql") {
+                sql << "SELECT LASTVAL()", soci::into(id);
+            } else if (sql.get_backend_name() == "sqlite3") {
+                sql << "SELECT last_insert_rowid()", soci::into(id);
+            }
+            return id;
+        }
 
         soci::session& m_sql;
         iblockchain_node<SettingsObject> * _bc_node = nullptr;
